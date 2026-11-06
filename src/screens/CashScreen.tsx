@@ -272,7 +272,6 @@ export default function CashScreen() {
             </Card>
           </>
         )}
-        <NextLink to="/tariffs">Next: what if tariffs change?</NextLink>
       </NeedsData>
     </div>
   )

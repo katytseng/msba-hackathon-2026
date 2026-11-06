@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { pct, usd } from '../format'
 import { useApp } from '../state'
 import { supplierSentence } from '../summaries'
-import { Callout, Card, Collapse, Info, NeedsData, NextLink, PageHeader, Segmented } from '../components/ui'
+import { Callout, Card, Collapse, Info, NeedsData, PageHeader, Segmented } from '../components/ui'
 
 export default function CompareScreen() {
   const { inputs, ranked, chosen, setSelectedId } = useApp()
@@ -161,7 +161,6 @@ export default function CompareScreen() {
             <p className="mt-3 text-xs text-slate-500">Freight, customs fees and broker are spread across products by their share of product value.</p>
           </Card>
         )}
-        <NextLink to="/cash">Next: can your cash carry it?</NextLink>
       </NeedsData>
     </div>
   )

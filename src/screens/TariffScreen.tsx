@@ -12,7 +12,7 @@ import {
 } from '../engine'
 import { niceDate, num, pct, shortDate, usd } from '../format'
 import { rates, useApp } from '../state'
-import { Button, Card, Details, NeedsData, NextLink, PageHeader } from '../components/ui'
+import { Button, Card, Details, NeedsData, PageHeader } from '../components/ui'
 
 const RANGE_ABOVE_TODAY = 0.3
 const SAME = 0.0005 // rates closer than this count as equal (slider steps are 0.005)
@@ -165,8 +165,6 @@ export default function TariffScreen() {
             </div>
           </>
         )}
-
-        <NextLink to="/summary">Next: summary</NextLink>
       </NeedsData>
     </div>
   )

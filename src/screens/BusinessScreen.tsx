@@ -1,7 +1,7 @@
 import type { Business, Product } from '../engine'
 import { pct } from '../format'
 import { APR_PRESETS, rates, useApp } from '../state'
-import { Button, Card, Info, NextLink, NumberField, PageHeader } from '../components/ui'
+import { Button, Card, Info, NumberField, PageHeader } from '../components/ui'
 
 const htsCodes = Object.entries(rates.baseTariffs)
 
@@ -131,8 +131,6 @@ export default function BusinessScreen() {
         </div>
         <p className="mt-3 text-xs text-slate-500">Base tariffs come from the USITC Harmonized Tariff Schedule, stored in rates.json.</p>
       </Card>
-
-      <NextLink to="/suppliers">Next: supplier quotes</NextLink>
     </div>
   )
 }
