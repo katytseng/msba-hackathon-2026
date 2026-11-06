@@ -3,11 +3,15 @@ import { rates, useApp } from '../state'
 import { DISCLAIMER, nextOrderSentences, supplierSentence, thisOrderSentences } from '../summaries'
 import { Button, Callout, Card, Info, NeedsData, PageHeader } from '../components/ui'
 import type { GlossaryKey } from '../glossary'
+import { AiExplanation } from '../components/AiExplanation'
+import { productBaseRate } from '../engine'
+import htsMeta from '../../public/hts/meta.json'
 
 const ASSUMPTIONS = [
   'Prices are FOB (you pay freight from the port of origin).',
   'One ocean shipment and one customs entry into LA/Long Beach.',
   'Tariffs are charged on product value only.',
+  'Base tariffs use the HTS general (most-favored-nation) rate, as a percent of value. Codes charged per kg, per unit or a mix are not supported, and trade-agreement (special) rates are not applied.',
   'One flat extra tariff per country.',
   'No returns, platform fees or sales tax.',
   'Freight and fixed fees are spread across products by share of product value.',
@@ -15,7 +19,8 @@ const ASSUMPTIONS = [
 
 export default function SummaryScreen() {
   const { inputs, ranked, chosen, cash, be } = useApp()
-  const usedCodes = new Set(inputs.products.map((p) => p.htsCode))
+  // One row per HTS code: the rate picked from the full schedule, else the rates.json entry.
+  const usedCodes = [...new Map(inputs.products.map((p) => [p.htsCode, p])).values()]
   const usedCountries = new Set(inputs.suppliers.map((s) => s.country))
   const f = rates.fees
 
@@ -25,6 +30,7 @@ export default function SummaryScreen() {
       <NeedsData>
         {chosen && cash && (
           <>
+            <AiExplanation />
             <div className="mb-5 grid gap-5 md:grid-cols-2">
               <Card title="This order">
                 <p className="mb-3 text-sm text-slate-700">{supplierSentence(ranked)}</p>
@@ -73,9 +79,20 @@ export default function SummaryScreen() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...usedCodes].map((code) => {
-                      const r = rates.baseTariffs[code]
-                      return <Row key={code} name={`Base tariff, HTS ${code} (${r.description})`} value={pct(r.rate)} source={r.source} url={r.url} date={r.date} />
+                    {usedCodes.map((p) => {
+                      const r = rates.baseTariffs[p.htsCode]
+                      if (typeof p.baseRate === 'number' || !r)
+                        return (
+                          <Row
+                            key={p.htsCode}
+                            name={`Base tariff, HTS ${p.htsCode} (${p.htsDescription ?? 'from the HTS'})`}
+                            value={pct(productBaseRate(rates, p))}
+                            source={`USITC Harmonized Tariff Schedule${p.htsRelease ? `, ${p.htsRelease}` : ''}`}
+                            url="https://hts.usitc.gov/"
+                            date={htsMeta.fetchedAt.slice(0, 10)}
+                          />
+                        )
+                      return <Row key={p.htsCode} name={`Base tariff, HTS ${p.htsCode} (${r.description})`} value={pct(r.rate)} source={r.source} url={r.url} date={r.date} />
                     })}
                     {[...usedCountries].map((c) => {
                       const r = rates.extraTariffs[c]

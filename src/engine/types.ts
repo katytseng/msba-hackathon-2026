@@ -9,6 +9,13 @@ export interface Product {
   id: string
   name: string
   htsCode: string
+  /**
+   * Base tariff picked from the full HTS (public/hts). When set it wins over rates.json,
+   * so any code in the schedule works, not only the curated ones.
+   */
+  baseRate?: number
+  htsDescription?: string
+  htsRelease?: string // USITC release the rate came from, e.g. 2026HTSRev22
   qty: number
   sellPrice: number
   salesPerWeek: number

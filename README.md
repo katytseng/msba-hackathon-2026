@@ -35,6 +35,8 @@ If tests fail, the deploy stops. That is on purpose: a wrong number never goes l
 | `src/components/OrderModal.tsx` | The order pop-up: steps 1 to 6 as tabs, Back/Next, and Save order. Route `/#/order/<step>`. |
 | `src/engine/engine.test.ts` | Tests locked to the expected results, to the cent. |
 | `src/data/rates.json` | Every tariff and fee, with source and date. Tasks B1 and B2 update this. |
+| `public/hts/` | The full USITC Harmonized Tariff Schedule for the HTS code picker. Written by `scripts/sync-hts.mjs`; don't edit by hand. |
+| `src/components/HtsPicker.tsx`, `src/hts/` | HTS code picker: search by code or words, or browse Section → Chapter → Heading → line. |
 | `src/data/sample.json` | The menswear sample scenario (Load sample button). |
 | `src/summaries/index.ts` | Template sentences built from engine numbers. No AI. |
 | `src/screens/` | Business, Supplier quotes, Compare, Cash check, Tariff what-if, Summary. |
@@ -53,3 +55,11 @@ Saved orders live in the browser (localStorage key `landed-cost:orders:v1`).
 ## Changing a rate
 
 Edit `src/data/rates.json`, keep `source` and `date` filled in, then run `npm test`. If a sample rate changed on purpose, update the expected numbers in both `CONTEXT.md` and `engine.test.ts`.
+
+## HTS data (daily sync)
+
+`.github/workflows/hts-sync.yml` runs every day. It asks the [USITC HTS API](https://hts.usitc.gov/reststop/releaseList) for the current release and, only if it changed, runs `scripts/sync-hts.mjs`, commits `public/hts/` and `data/hts/chapter99.json` to `main`, and starts the Pages deploy. If Chapter 99 (Section 301 and other extra tariffs) changed, it opens an issue so someone re-checks `extraTariffs` in `rates.json` by hand; those country rates are not updated automatically.
+
+Run it by hand with `node scripts/sync-hts.mjs` (add `--force` to regenerate the same release). In GitHub, use **Actions > Sync HTS data > Run workflow**.
+
+**Limitations.** Estimates use the general (most-favored-nation) rate only, and only when it is a percent of value or Free (about 89% of rated lines). Lines charged per kg, per unit (pair, dozen, each), per liter, or a mix such as `49.7¢/kg + 19.7%` are shown in the picker but can't be picked; they cluster in food and farm products, wool apparel, some footwear and watches. Trade-agreement (special) rates and value brackets (e.g. "valued over $12/pair") are not checked against your prices. Search matches the schedule's own wording plus a short list of everyday words (sneakers, laptop, jeans); use Browse when search comes up empty.
