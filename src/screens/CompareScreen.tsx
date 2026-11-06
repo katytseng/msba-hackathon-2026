@@ -2,12 +2,22 @@ import { useState } from 'react'
 import { pct, usd } from '../format'
 import { useApp } from '../state'
 import { supplierSentence } from '../summaries'
-import { Callout, Card, DetailsToggle, Info, NeedsData, PageHeader } from '../components/ui'
+import { Callout, Card, Collapse, Info, NeedsData, PageHeader, Segmented } from '../components/ui'
 
 export default function CompareScreen() {
   const { inputs, ranked, chosen, setSelectedId } = useApp()
   const [details, setDetails] = useState(false)
-  const toggleDetails = <DetailsToggle open={details} onToggle={() => setDetails((v) => !v)} label="calculation details" />
+  const toggleDetails = (
+    <Segmented
+      label="Calculation details"
+      value={details ? 'details' : 'totals'}
+      onChange={(v) => setDetails(v === 'details')}
+      options={[
+        { value: 'totals', label: 'Totals' },
+        { value: 'details', label: 'Details' },
+      ]}
+    />
+  )
 
   return (
     <div>
@@ -19,8 +29,7 @@ export default function CompareScreen() {
           </Callout>
         </div>
 
-        <Card title="Suppliers, cheapest first" className="mb-5">
-          <div className="-mt-1 mb-2 flex justify-end">{toggleDetails}</div>
+        <Card title="Suppliers, cheapest first" className="mb-5" actions={toggleDetails}>
           <div className="overflow-x-auto">
             <table className="w-full whitespace-nowrap text-sm tabular-nums">
               <thead>
@@ -78,14 +87,14 @@ export default function CompareScreen() {
                       <td className="py-3 pr-3">
                         {usd(tariff)}
                         <div className="text-xs text-slate-500">{r.customsValue > 0 ? `${pct(tariff / r.customsValue)} of value` : ''}</div>
-                        {details && (
+                        <Collapse open={details}>
                           <div className="mt-1 space-y-0.5 border-t border-slate-200 pt-1 text-xs text-slate-600">
                             <div>Base {usd(r.baseDuty)}</div>
                             <div>
                               + Extra {usd(r.extraDuty)} <span className="text-slate-400">({pct(r.extraRate)})</span>
                             </div>
                           </div>
-                        )}
+                        </Collapse>
                       </td>
                       <td className="py-3 pr-3">{usd(r.freight + r.insurance)}</td>
                       <td className="py-3 pr-3">{usd(r.mpf + r.hmf + r.broker)}</td>
@@ -93,11 +102,11 @@ export default function CompareScreen() {
                         {sup && (
                           <>
                             {sup.leadTimeDays + sup.transitDays} days
-                            {details && (
+                            <Collapse open={details}>
                               <div className="mt-1 border-t border-slate-200 pt-1 text-xs text-slate-600">
                                 {sup.leadTimeDays} lead + {sup.transitDays} transit
                               </div>
-                            )}
+                            </Collapse>
                           </>
                         )}
                       </td>
@@ -113,8 +122,7 @@ export default function CompareScreen() {
         </Card>
 
         {chosen && (
-          <Card title={`Landed cost per unit: ${chosen.supplierName} (${chosen.country})`}>
-            <div className="-mt-1 mb-2 flex justify-end">{toggleDetails}</div>
+          <Card title={`Landed cost per unit: ${chosen.supplierName} (${chosen.country})`} actions={toggleDetails}>
             <div className="overflow-x-auto">
               <table className="w-full whitespace-nowrap text-sm tabular-nums">
                 <thead>
@@ -136,11 +144,11 @@ export default function CompareScreen() {
                       <td className="py-2 pr-3">{usd(p.unitPrice, true)}</td>
                       <td className="py-2 pr-3">
                         {pct(p.baseRate + chosen.extraRate)}
-                        {details && (
+                        <Collapse open={details}>
                           <div className="text-xs text-slate-500">
                             {pct(p.baseRate)} base + {pct(chosen.extraRate)} extra
                           </div>
-                        )}
+                        </Collapse>
                       </td>
                       <td className="py-2 pr-3 font-semibold">{usd(p.landedUnit, true)}</td>
                       <td className="py-2 pr-3 text-slate-600">{p.unitPrice > 0 ? `+${pct(p.landedUnit / p.unitPrice - 1, 0)}` : ''}</td>

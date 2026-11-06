@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Supplier } from '../engine'
 import { pct, usd } from '../format'
 import { rates, useApp } from '../state'
-import { Button, Card, DetailsToggle, Info, NumberField, PageHeader } from '../components/ui'
+import { Button, Card, Collapse, DetailsToggle, Info, NumberField, PageHeader } from '../components/ui'
 
 const countries = Object.keys(rates.extraTariffs)
 
@@ -92,8 +92,8 @@ export default function SuppliersScreen() {
                       <span className="text-xs text-slate-500">{pct(tariff / r.customsValue)} of product value</span>
                       <DetailsToggle open={showDetails} controls={detailsId} onToggle={() => setOpenTariff((o) => ({ ...o, [s.id]: !o[s.id] }))} />
                     </div>
-                    {showDetails && (
-                      <dl id={detailsId} className="mt-2 space-y-1 border-t border-slate-200 pt-2 text-xs tabular-nums text-slate-600">
+                    <Collapse open={showDetails} id={detailsId}>
+                      <dl className="mt-2 space-y-1 border-t border-slate-200 pt-2 text-xs tabular-nums text-slate-600">
                         <div className="flex justify-between gap-2">
                           <dt className="flex items-center">
                             Base tariff (HTS)
@@ -114,7 +114,7 @@ export default function SuppliersScreen() {
                         </div>
                         {extra && <p className="text-slate-500">{extra.note}</p>}
                       </dl>
-                    )}
+                    </Collapse>
                   </>
                 ) : (
                   <p className="text-xs text-slate-500">
