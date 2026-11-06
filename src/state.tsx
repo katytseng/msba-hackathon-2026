@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   breakEven,
   cashTimeline,
@@ -11,13 +11,43 @@ import {
 } from './engine'
 import ratesJson from './data/rates.json'
 import sampleJson from './data/sample.json'
+import suppliersJson from './data/suppliers.json'
 
 export const rates = ratesJson as unknown as Rates
-const sample = sampleJson as Inputs
+const sample = { ...sampleJson, suppliers: suppliersJson } as Inputs
+
+export const DEFAULT_APR = 0.06
+export const APR_PRESETS = [0.06, 0.08, 0.1, 0.12]
+
+const DRAFT_KEY = 'landed-cost:draft:v1'
+
+/** Restore the saved draft, or null if there is none or it doesn't look like Inputs. */
+function loadDraft(): Inputs | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const d = JSON.parse(raw)
+    const b = d?.business
+    const ok =
+      b && typeof b.cash === 'number' && typeof b.buffer === 'number' && typeof b.apr === 'number' &&
+      typeof b.orderDate === 'string' && Array.isArray(d.products) && Array.isArray(d.suppliers)
+    return ok ? (d as Inputs) : null
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(inputs: Inputs) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(inputs))
+  } catch {
+    // storage full or blocked: the app still works, it just won't remember
+  }
+}
 
 const today = () => new Date().toISOString().slice(0, 10)
 export const emptyInputs = (): Inputs => ({
-  business: { cash: 0, buffer: 0, apr: 0.12, orderDate: today() },
+  business: { cash: 0, buffer: 0, apr: DEFAULT_APR, orderDate: today() },
   products: [],
   suppliers: [],
 })
@@ -25,7 +55,7 @@ export const emptyInputs = (): Inputs => ({
 interface AppState {
   inputs: Inputs
   setInputs: (fn: (prev: Inputs) => Inputs) => void
-  loadSample: () => void
+  resetToSample: () => void
   reset: () => void
   selectedId: string | null
   setSelectedId: (id: string) => void
@@ -39,8 +69,10 @@ interface AppState {
 const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [inputs, setInputsRaw] = useState<Inputs>(emptyInputs)
+  const [inputs, setInputsRaw] = useState<Inputs>(() => loadDraft() ?? emptyInputs())
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  useEffect(() => saveDraft(inputs), [inputs])
 
   const derived = useMemo(() => {
     try {
@@ -57,7 +89,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value: AppState = {
     inputs,
     setInputs: (fn) => setInputsRaw((prev) => fn(prev)),
-    loadSample: () => {
+    resetToSample: () => {
       setInputsRaw(structuredClone(sample))
       setSelectedId(null)
     },

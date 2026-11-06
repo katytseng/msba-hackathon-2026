@@ -18,7 +18,7 @@ const steps = [
 ]
 
 function Shell() {
-  const { loadSample, reset } = useApp()
+  const { resetToSample, reset } = useApp()
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
@@ -28,7 +28,7 @@ function Shell() {
             <p className="text-xs text-slate-500">What your order really costs after tariffs, and whether your cash can carry it.</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={loadSample}>Load sample</Button>
+            <Button onClick={resetToSample}>Reset to sample</Button>
             <Button variant="secondary" onClick={reset}>Reset</Button>
           </div>
         </div>

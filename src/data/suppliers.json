@@ -1,0 +1,5 @@
+[
+  { "id": "A", "name": "Supplier A", "country": "China", "prices": { "tee": 3.8, "shirt": 7.5, "pants": 9.0, "jacket": 18.0, "sneaker": 14.0 }, "freight": 4500, "depositPct": 0.3, "balanceDays": 0, "leadTimeDays": 35, "transitDays": 18 },
+  { "id": "B", "name": "Supplier B", "country": "Vietnam", "prices": { "tee": 4.2, "shirt": 8.2, "pants": 9.8, "jacket": 19.5, "sneaker": 15.5 }, "freight": 5000, "depositPct": 0.3, "balanceDays": 0, "leadTimeDays": 40, "transitDays": 22 },
+  { "id": "C", "name": "Supplier C", "country": "India", "prices": { "tee": 3.6, "shirt": 7.0, "pants": 9.5, "jacket": 21.0, "sneaker": 16.5 }, "freight": 6500, "depositPct": 0.2, "balanceDays": 30, "leadTimeDays": 45, "transitDays": 32 }
+]

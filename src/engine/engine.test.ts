@@ -4,9 +4,10 @@ import { breakEven, cashTimeline, compareSuppliers, costBreakdown, countryFlipRa
 import type { Inputs, Rates } from './types'
 import ratesJson from '../data/rates.json'
 import sampleJson from '../data/sample.json'
+import suppliersJson from '../data/suppliers.json'
 
 const rates = ratesJson as unknown as Rates
-const inputs = sampleJson as Inputs
+const inputs = { ...sampleJson, suppliers: suppliersJson } as Inputs
 const supplier = (id: string) => inputs.suppliers.find((s) => s.id === id)!
 const cents = (x: number) => Math.round(x * 100) / 100
 
@@ -90,7 +91,7 @@ describe('cash timeline with China', () => {
     expect(cash.lowestWeek).toBe(5)
     expect(cents(cash.shortfall)).toBe(3042)
     expect(cash.weeksBelowBuffer).toBe(3)
-    expect(Math.round(cash.interest)).toBe(21)
+    expect(cents(cash.interest)).toBe(10.5)
     expect(cash.headroom).toBe(0)
     expect(cash.extraUnits).toBe(0)
   })
