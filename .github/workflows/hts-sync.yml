@@ -1,0 +1,66 @@
+# Daily check for a new USITC Harmonized Tariff Schedule release.
+# When the release changes, it regenerates public/hts/ (the data behind the HTS code picker),
+# commits it to main and starts the Pages deploy. If Chapter 99 (extra tariffs such as
+# Section 301) changed, it opens an issue so someone re-checks extraTariffs in rates.json by hand.
+name: Sync HTS data
+
+on:
+  schedule:
+    - cron: "17 11 * * *" # every day, 11:17 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Regenerate even if the release has not changed"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # commit the new data
+  actions: write # start the Pages deploy workflow
+  issues: write # flag Chapter 99 changes
+
+concurrency:
+  group: hts-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch HTS from USITC
+        id: sync
+        run: node scripts/sync-hts.mjs ${{ inputs.force && '--force' || '' }}
+      - name: Commit new data
+        id: commit
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          git add public/hts data/hts
+          if git diff --cached --quiet; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync HTS data to ${{ steps.sync.outputs.release }}"
+          git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+      - name: Deploy the site
+        # Pushes made with GITHUB_TOKEN do not trigger other workflows, so start the deploy explicitly.
+        if: steps.commit.outputs.pushed == 'true'
+        run: gh workflow run static.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Flag Chapter 99 changes
+        if: steps.sync.outputs.ch99_changed == 'true'
+        run: |
+          gh issue create \
+            --title "HTS Chapter 99 changed in ${{ steps.sync.outputs.release }}: re-check extra tariffs" \
+            --body "The daily HTS sync found changes in Chapter 99 (Section 301 and other extra tariffs). See the diff of \`data/hts/chapter99.json\` in the latest sync commit, then update \`extraTariffs\` in \`src/data/rates.json\` if any country's rate changed."
+        env:
+          GH_TOKEN: ${{ github.token }}

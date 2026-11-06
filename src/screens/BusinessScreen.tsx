@@ -1,7 +1,8 @@
-import type { Business, Product } from '../engine'
+import { productBaseRate, type Business, type Product } from '../engine'
 import { pct } from '../format'
 import { APR_PRESETS, rates, useApp } from '../state'
 import { Button, Card, Info, NumberField, PageHeader } from '../components/ui'
+import HtsPicker from '../components/HtsPicker'
 
 const htsCodes = Object.entries(rates.baseTariffs)
 
@@ -89,19 +90,13 @@ export default function BusinessScreen() {
                     />
                   </td>
                   <td className="py-2 pr-2">
-                    <select
-                      className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-                      value={p.htsCode}
-                      onChange={(e) => setProduct(p.id, { htsCode: e.target.value })}
-                    >
-                      {htsCodes.map(([code, r]) => (
-                        <option key={code} value={code}>
-                          {code} · {r.description}
-                        </option>
-                      ))}
-                    </select>
+                    <HtsPicker
+                      code={p.htsCode}
+                      description={p.htsDescription}
+                      onPick={(pick) => setProduct(p.id, pick)}
+                    />
                   </td>
-                  <td className="py-2 pr-2 text-right tabular-nums text-slate-600">{pct(rates.baseTariffs[p.htsCode]?.rate ?? 0)}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-slate-600">{pct(productBaseRate(rates, p))}</td>
                   <td className="py-2 pr-2">
                     <NumberField compact label="Quantity" value={p.qty} onChange={(v) => setProduct(p.id, { qty: Math.max(0, Math.round(v)) })} />
                   </td>
@@ -129,7 +124,10 @@ export default function BusinessScreen() {
         <div className="mt-3">
           <Button variant="secondary" onClick={addProduct}>+ Add product</Button>
         </div>
-        <p className="mt-3 text-xs text-slate-500">Base tariffs come from the USITC Harmonized Tariff Schedule, stored in rates.json.</p>
+        <p className="mt-3 text-xs text-slate-500">
+          Search or browse the full USITC Harmonized Tariff Schedule, refreshed daily. Estimates use the general (most-favored-nation)
+          rate and only support percent and Free rates; codes charged per kg, per unit or a mix of both can’t be picked yet.
+        </p>
       </Card>
     </div>
   )

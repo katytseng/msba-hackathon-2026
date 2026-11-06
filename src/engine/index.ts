@@ -11,6 +11,7 @@ import type {
   Inputs,
   LandedResult,
   OrderMargin,
+  Product,
   ProductSales,
   Rates,
   RankedResult,
@@ -26,6 +27,11 @@ export function baseRateFor(rates: Rates, htsCode: string): number {
   const entry = rates.baseTariffs[htsCode]
   if (!entry) throw new Error(`No base tariff in rates.json for HTS code ${htsCode}`)
   return entry.rate
+}
+
+/** The base tariff for one product: the rate picked from the full HTS, else the rates.json entry. */
+export function productBaseRate(rates: Rates, p: Pick<Product, 'htsCode' | 'baseRate'>): number {
+  return typeof p.baseRate === 'number' ? p.baseRate : baseRateFor(rates, p.htsCode)
 }
 
 export function extraRateFor(rates: Rates, country: string): number {
@@ -53,7 +59,7 @@ export function landedCost(
   for (const p of inputs.products) {
     const price = supplier.prices[p.id] ?? 0
     customsValue += price * p.qty
-    baseDuty += price * p.qty * baseRateFor(rates, p.htsCode)
+    baseDuty += price * p.qty * productBaseRate(rates, p)
     units += p.qty
   }
 
@@ -69,7 +75,7 @@ export function landedCost(
   const fixed = freight + mpf + hmf + broker
   const perProduct = inputs.products.map((p) => {
     const price = supplier.prices[p.id] ?? 0
-    const baseRate = baseRateFor(rates, p.htsCode)
+    const baseRate = productBaseRate(rates, p)
     const landedUnit =
       customsValue > 0
         ? price * (1 + baseRate + extraRate + fees.insurance.rate) + (price / customsValue) * fixed

@@ -43,6 +43,10 @@ jobs:
         env:
           # Project pages are served at /<repo-name>/
           VITE_BASE: /${{ github.event.repository.name }}/
+          # Cloudflare Worker /explain URL for AI explanations (repo Settings > Secrets and variables >
+          # Actions > Variables > EXPLAIN_URL). Not a secret: the API key lives only in the Worker.
+          # If unset, the app shows the template summary instead.
+          VITE_EXPLAIN_URL: ${{ vars.EXPLAIN_URL }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
