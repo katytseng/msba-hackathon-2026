@@ -129,12 +129,75 @@ export function DetailsToggle({ open, onToggle, label = 'details', controls }: {
   )
 }
 
-export function Card({ title, children, className = '' }: { title?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({
+  title,
+  actions,
+  children,
+  className = '',
+}: {
+  title?: ReactNode
+  /** Controls shown at the top right of the card, next to the title. */
+  actions?: ReactNode
+  children: ReactNode
+  className?: string
+}) {
   return (
     <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
-      {title && <h2 className="mb-3 text-base font-semibold text-slate-800">{title}</h2>}
+      {(title || actions) && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {title && <h2 className="text-base font-semibold text-slate-800">{title}</h2>}
+          {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
+        </div>
+      )}
       {children}
     </section>
+  )
+}
+
+/**
+ * Segmented switch: an outer track with the options, and a white pill that slides under the selected one.
+ * Built on native radio buttons, so arrow keys and screen readers work.
+ */
+export function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  const name = useId()
+  const index = Math.max(0, options.findIndex((o) => o.value === value))
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="relative grid rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs font-medium"
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+    >
+      <span
+        aria-hidden
+        className="absolute inset-y-0.5 left-0.5 rounded-md bg-white shadow-sm ring-1 ring-slate-200 transition-transform duration-200 ease-out motion-reduce:transition-none"
+        style={{ width: `calc((100% - 4px) / ${options.length})`, transform: `translateX(${index * 100}%)` }}
+      />
+      {options.map((o) => (
+        <label key={o.value} className="relative z-10 cursor-pointer">
+          <input
+            type="radio"
+            name={name}
+            className="peer sr-only"
+            checked={o.value === value}
+            onChange={() => onChange(o.value)}
+          />
+          <span className="block whitespace-nowrap rounded-md px-2.5 py-1 text-center text-slate-500 transition-colors peer-checked:text-slate-900 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 hover:text-slate-800">
+            {o.label}
+          </span>
+        </label>
+      ))}
+    </div>
   )
 }
 
