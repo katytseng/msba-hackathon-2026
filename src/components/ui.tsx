@@ -158,3 +158,18 @@ export function Callout({ tone, children }: { tone: 'good' | 'warn' | 'info'; ch
     </div>
   )
 }
+
+/** Click-to-expand section. Native details/summary: keyboard and screen reader friendly, closed by default. */
+export function Details({ summary, children }: { summary: string; children: ReactNode }) {
+  return (
+    <details className="group mt-3 rounded-md border border-slate-200 bg-slate-50 text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-3 py-2 font-medium text-blue-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden">
+        <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">
+          ▸
+        </span>
+        {summary}
+      </summary>
+      <div className="px-3 pb-3 pt-1 text-slate-700">{children}</div>
+    </details>
+  )
+}

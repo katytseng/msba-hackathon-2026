@@ -1,6 +1,6 @@
 // These tests lock the engine to "Expected results" in CONTEXT.md, to the cent.
 import { describe, expect, it } from 'vitest'
-import { breakEven, cashTimeline, compareSuppliers, landedCost } from './index'
+import { breakEven, cashTimeline, compareSuppliers, costBreakdown, countryFlipRate, landedCost, orderMargin, tariffScenario } from './index'
 import type { Inputs, Rates } from './types'
 import ratesJson from '../data/rates.json'
 import sampleJson from '../data/sample.json'
@@ -122,5 +122,122 @@ describe('India payment terms', () => {
     const c = cashTimeline(inputs, supplier('C'), rates)
     expect(c.events.find((e) => e.label === 'Balance to supplier')!.day).toBe(75)
     expect(c.arrivalDay).toBe(77)
+  })
+})
+
+describe('tariff scenario on China', () => {
+  const today = tariffScenario(inputs, rates, 'China', 0.2)!
+
+  it('at today\'s rate matches the locked landed and cash numbers', () => {
+    expect(today.todayRate).toBe(0.2)
+    expect(today.switched).toBe(false)
+    expect(today.cheapest.country).toBe('China')
+    expect(cents(today.cheapest.total)).toBe(44743.88)
+    expect(today.runnerUp!.country).toBe('India')
+    expect(cents(today.gapToRunnerUp)).toBe(1453.61)
+    expect(cents(today.cash.lowest)).toBe(6958)
+    expect(cents(today.cash.shortfall)).toBe(3042)
+    expect(Math.round(today.cash.interest)).toBe(21)
+  })
+
+  it('at today\'s rate gives the gross margin on the full order', () => {
+    expect(today.margin.revenue).toBe(203200)
+    expect(cents(today.margin.landed)).toBe(44743.88)
+    expect(cents(today.margin.margin)).toBe(158456.12)
+    expect(Math.round(today.margin.marginPct * 10000) / 10000).toBe(0.7798)
+    expect(today.margin.weeksToSellOut).toBe(15)
+    expect(today.margin.unsoldUnits).toBe(0)
+  })
+
+  it('+10 points on China makes India cheapest, with India\'s margin and cash', () => {
+    const s = tariffScenario(inputs, rates, 'China', 0.3)!
+    expect(s.cheapest.country).toBe('India')
+    expect(s.switched).toBe(true)
+    expect(s.runnerUp!.country).toBe('Vietnam')
+    expect(cents(s.cheapest.total)).toBe(46197.49)
+    expect(s.cash.supplierId).toBe('C')
+    expect(s.margin.landed).toBe(s.cheapest.total)
+    expect(s.delta).toBeCloseTo(0.1, 10)
+    expect(s.staying.supplierId).toBe('A')
+    expect(cents(s.staying.total)).toBe(47583.88)
+    expect(cents(s.savingsVsStaying)).toBe(1386.39)
+  })
+
+  it('has no savings when nothing changes', () => {
+    expect(today.delta).toBe(0)
+    expect(today.staying.supplierId).toBe(today.cheapest.supplierId)
+    expect(today.savingsVsStaying).toBe(0)
+  })
+
+  it('tariff removed keeps China cheapest and lowers its landed cost', () => {
+    const s = tariffScenario(inputs, rates, 'China', 0)!
+    expect(s.cheapest.country).toBe('China')
+    expect(s.cheapest.extraDuty).toBe(0)
+    expect(s.cheapest.total).toBeLessThan(today.cheapest.total)
+    expect(s.margin.margin).toBeGreaterThan(today.margin.margin)
+  })
+
+  it('flips to India at today\'s rate plus the break-even', () => {
+    const flip = countryFlipRate(inputs, rates, 'China')!
+    const be = breakEven(compareSuppliers(inputs, rates))!
+    expect(flip).toBeCloseTo(0.2 + be.rate, 10)
+    expect(tariffScenario(inputs, rates, 'China', flip - 0.0001)!.cheapest.country).toBe('China')
+    expect(tariffScenario(inputs, rates, 'China', flip + 0.0001)!.cheapest.country).toBe('India')
+  })
+})
+
+describe('order margin', () => {
+  it('counts full sell-through, past the end of the cash timeline', () => {
+    // 1,500 tees at 1 a week takes 1,500 weeks; the cash timeline stops at 156.
+    const slow: Inputs = { ...inputs, products: inputs.products.map((p) => (p.id === 'tee' ? { ...p, salesPerWeek: 1 } : p)) }
+    const lc = landedCost(slow, supplier('A'), rates)
+    const m = orderMargin(slow, lc)
+    const fullRevenue = slow.products.reduce((s, p) => s + p.qty * p.sellPrice, 0)
+    const timelineRevenue = cashTimeline(slow, supplier('A'), rates, lc).weeks.reduce((s, w) => s + w.inflow, 0)
+    expect(m.revenue).toBe(fullRevenue)
+    expect(timelineRevenue).toBeLessThan(fullRevenue)
+    expect(m.weeksToSellOut).toBe(1500)
+  })
+
+  it('leaves out products with no weekly sales', () => {
+    const noJackets: Inputs = { ...inputs, products: inputs.products.map((p) => (p.id === 'jacket' ? { ...p, salesPerWeek: 0 } : p)) }
+    const m = orderMargin(noJackets, landedCost(noJackets, supplier('A'), rates))
+    expect(m.unsoldUnits).toBe(300)
+    expect(m.revenue).toBe(noJackets.products.filter((p) => p.id !== 'jacket').reduce((s, p) => s + p.qty * p.sellPrice, 0))
+  })
+})
+
+describe('order margin per product', () => {
+  it('lists sales for each product and adds up to the revenue', () => {
+    const m = orderMargin(inputs, landedCost(inputs, supplier('A'), rates))
+    const tee = m.perProduct.find((p) => p.productId === 'tee')!
+    expect(tee).toMatchObject({ qty: 1500, sellPrice: 28, salesPerWeek: 150, revenue: 42000, weeksToSellOut: 10 })
+    expect(m.perProduct.reduce((s, p) => s + p.revenue, 0)).toBe(m.revenue)
+  })
+})
+
+describe('cost breakdown', () => {
+  it('matches China at today\'s rate, line by line', () => {
+    const b = costBreakdown(landedCost(inputs, supplier('A'), rates))
+    expect(b.total).toBe(44743.88)
+    expect(b.lines.map((l) => l.key)).toEqual(['product', 'baseDuty', 'extraDuty', 'mpf', 'hmf', 'insurance', 'freight', 'broker'])
+    const line = (k: string) => b.lines.find((l) => l.key === k)!.amount
+    expect(line('product')).toBe(28400)
+    expect(line('extraDuty')).toBe(5680)
+    expect(line('freight')).toBe(4500)
+    expect(line('broker')).toBe(250)
+  })
+
+  it('always adds up to the cent, within a cent of each raw amount', () => {
+    for (const s of inputs.suppliers) {
+      for (let d = -0.1; d <= 0.4; d += 0.0037) {
+        const lc = landedCost(inputs, s, rates, d)
+        const b = costBreakdown(lc)
+        const sumCents = b.lines.reduce((acc, l) => acc + Math.round(l.amount * 100), 0)
+        expect(sumCents).toBe(Math.round(lc.total * 100))
+        const raws = [lc.customsValue, lc.baseDuty, lc.extraDuty, lc.mpf, lc.hmf, lc.insurance, lc.freight, lc.broker]
+        b.lines.forEach((l, i) => expect(Math.abs(l.amount - raws[i])).toBeLessThan(0.0101))
+      }
+    }
   })
 })

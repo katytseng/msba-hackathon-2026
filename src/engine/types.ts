@@ -123,3 +123,47 @@ export interface BreakEven {
   gap: number
   rate: number // extra-tariff rise (as a fraction) on the cheapest that makes runner-up win
 }
+
+export interface OrderMargin {
+  revenue: number // every unit with weekly sales, sold at its sell price (full sell-through)
+  landed: number
+  margin: number // revenue - landed
+  marginPct: number // margin / revenue, 0 when there is no revenue
+  weeksToSellOut: number // weeks of sales needed to clear all stock that sells
+  unsoldUnits: number // units of products with no weekly sales; never sold, not counted
+  perProduct: ProductSales[]
+}
+
+export interface ProductSales {
+  productId: string
+  name: string
+  qty: number
+  sellPrice: number
+  salesPerWeek: number
+  revenue: number // qty * sellPrice, or 0 when salesPerWeek is 0
+  weeksToSellOut: number | null // null when it never sells
+}
+
+export type CostLineKey = 'product' | 'baseDuty' | 'extraDuty' | 'mpf' | 'hmf' | 'insurance' | 'freight' | 'broker'
+
+export interface CostBreakdown {
+  lines: { key: CostLineKey; amount: number }[] // in dollars, rounded to cents
+  total: number // landed total rounded to cents; equals the sum of lines exactly
+}
+
+export interface TariffScenario {
+  country: string
+  todayRate: number
+  extraRate: number
+  delta: number // extraRate - todayRate (0.1 = +10 points)
+  ranked: RankedResult[]
+  cheapest: RankedResult
+  runnerUp: RankedResult | null
+  gapToRunnerUp: number
+  todayCheapest: RankedResult // cheapest at today's rates
+  staying: RankedResult // today's cheapest supplier, costed at this tariff
+  switched: boolean
+  savingsVsStaying: number // staying.total - cheapest.total; 0 when not switched
+  margin: OrderMargin // for the cheapest supplier at this tariff
+  cash: CashResult // for the cheapest supplier at this tariff
+}
