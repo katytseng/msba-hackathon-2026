@@ -137,7 +137,7 @@ describe('tariff scenario on China', () => {
     expect(cents(today.gapToRunnerUp)).toBe(1453.61)
     expect(cents(today.cash.lowest)).toBe(6958)
     expect(cents(today.cash.shortfall)).toBe(3042)
-    expect(Math.round(today.cash.interest)).toBe(21)
+    expect(cents(today.cash.interest)).toBe(10.5)
   })
 
   it('at today\'s rate gives the gross margin on the full order', () => {
