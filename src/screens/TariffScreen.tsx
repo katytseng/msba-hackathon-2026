@@ -85,7 +85,7 @@ export default function TariffScreen() {
       <NeedsData>
         {country && scenario && today && (
           <>
-            <p className="mb-2 text-xl font-semibold leading-snug text-slate-900" aria-live="polite">
+            <p className="mb-2 text-xl font-semibold leading-snug text-ink" aria-live="polite">
               {headline(scenario)}
             </p>
             <div className="mb-5">
@@ -94,12 +94,12 @@ export default function TariffScreen() {
 
             <Card className="mb-6">
               <div className="mb-3 flex flex-wrap items-center gap-3">
-                <label className="text-sm text-slate-700" htmlFor="tariff-country">
+                <label className="text-sm text-copy" htmlFor="tariff-country">
                   Country
                 </label>
                 <select
                   id="tariff-country"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                  className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm"
                   value={country}
                   onChange={(e) => setPickedCountry(e.target.value)}
                 >
@@ -112,9 +112,9 @@ export default function TariffScreen() {
               </div>
 
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-2xl font-bold tabular-nums text-blue-800">
+                <p className="text-2xl font-bold tabular-nums text-ink">
                   {country} extra tariff: {pct(rate)}
-                  <span className="ml-2 text-sm font-normal text-slate-500">Today: {pct(todayRate)}</span>
+                  <span className="ml-2 text-sm font-normal text-muted">Today: {pct(todayRate)}</span>
                 </p>
                 <div className="flex flex-wrap gap-2" role="group" aria-label="Tariff scenarios">
                   {presets.map((p) => (
@@ -139,12 +139,12 @@ export default function TariffScreen() {
                   step={0.5}
                   value={rate * 100}
                   onChange={(e) => setRate(parseFloat(e.target.value) / 100)}
-                  className="w-full accent-blue-700"
+                  className="w-full accent-ink"
                 />
                 {flipPos !== null && (
                   <div className="pointer-events-none absolute top-0 h-6" style={{ left: `${flipPos}%` }}>
-                    <div className="h-6 w-0.5 -translate-x-1/2 bg-amber-600" />
-                    <span className="absolute top-6 -translate-x-1/2 whitespace-nowrap text-xs font-medium text-amber-800">
+                    <div className="h-6 w-0.5 -translate-x-1/2 bg-accent" />
+                    <span className="absolute top-6 -translate-x-1/2 whitespace-nowrap text-xs font-medium text-accent-ink">
                       Cheapest changes at {pct(flip!)}
                     </span>
                   </div>
@@ -158,7 +158,7 @@ export default function TariffScreen() {
               ))}
             </div>
 
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">What it means for you</h2>
+            <h2 className="mb-3 text-lg font-semibold text-ink">What it means for you</h2>
             <div className="mb-5 grid gap-4 md:grid-cols-2">
               <CashCard s={scenario} today={today} buffer={inputs.business.buffer} orderDate={inputs.business.orderDate} />
               <ProfitCard s={scenario} today={today} />
@@ -171,14 +171,14 @@ export default function TariffScreen() {
 }
 
 function Tag({ tone, children }: { tone: 'green' | 'blue'; children: ReactNode }) {
-  const style = tone === 'green' ? 'bg-emerald-600 text-white' : 'bg-blue-100 text-blue-900'
+  const style = tone === 'green' ? 'bg-emerald-600 text-white' : 'bg-ink-soft text-ink'
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>{children}</span>
 }
 
 function Row({ label, children, strong = false }: { label: string; children: ReactNode; strong?: boolean }) {
   return (
-    <div className={`flex justify-between gap-3 py-1 ${strong ? 'font-semibold text-slate-900' : ''}`}>
-      <dt className="text-slate-600">{label}</dt>
+    <div className={`flex justify-between gap-3 py-1 ${strong ? 'font-semibold text-ink' : ''}`}>
+      <dt className="text-muted">{label}</dt>
       <dd className="tabular-nums">{children}</dd>
     </div>
   )
@@ -190,11 +190,11 @@ function SupplierCard({ r, moving, delta }: { r: RankedResult; moving: boolean; 
   return (
     <section
       aria-label={name(r)}
-      className={`rounded-lg border bg-white p-4 shadow-sm ${cheapest ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-slate-200'}`}
+      className={`rounded-lg border bg-surface p-4 shadow-sm ${cheapest ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-line'}`}
     >
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-slate-900">{r.supplierName}</h3>
-        <span className="text-sm text-slate-500">{r.country}</span>
+        <h3 className="font-semibold text-ink">{r.supplierName}</h3>
+        <span className="text-sm text-muted">{r.country}</span>
       </div>
       <div className="mb-3 flex min-h-6 flex-wrap gap-2">
         {cheapest && <Tag tone="green">Cheapest</Tag>}
@@ -217,7 +217,7 @@ function SupplierCard({ r, moving, delta }: { r: RankedResult; moving: boolean; 
               {usd(l.amount, true)}
             </Row>
           ))}
-          <div className="mt-1 border-t border-slate-300 pt-1">
+          <div className="mt-1 border-t border-line-strong pt-1">
             <Row label="Total cost" strong>
               {usd(breakdown.total, true)}
             </Row>
@@ -233,7 +233,7 @@ function CashCard({ s, today, buffer, orderDate }: { s: TariffScenario; today: T
   const lowWeek = c.weeks[c.lowestWeek]
   return (
     <Card title={`Cash with ${name(s.cheapest)}`}>
-      <div className="space-y-2 text-sm text-slate-700">
+      <div className="space-y-2 text-sm text-copy">
         {c.shortfall > 0 ? (
           <>
             <p className="text-2xl font-bold tabular-nums text-red-700">{usd(c.shortfall)} below</p>
@@ -266,7 +266,7 @@ function CashCard({ s, today, buffer, orderDate }: { s: TariffScenario; today: T
 function CashDetails({ c, orderDate }: { c: CashResult; orderDate: string }) {
   return (
     <>
-      <p className="mb-1 font-medium text-slate-900">Key payments</p>
+      <p className="mb-1 font-medium text-ink">Key payments</p>
       <ul className="mb-3 space-y-1">
         {c.events.map((e) => (
           <li key={e.label} className="flex justify-between gap-3">
@@ -277,10 +277,10 @@ function CashDetails({ c, orderDate }: { c: CashResult; orderDate: string }) {
           </li>
         ))}
       </ul>
-      <div className="max-h-72 overflow-auto rounded border border-slate-200 bg-white">
+      <div className="max-h-72 overflow-auto rounded border border-line bg-surface">
         <table className="w-full text-xs tabular-nums">
           <caption className="sr-only">Cash balance at the end of each week</caption>
-          <thead className="sticky top-0 bg-slate-100 text-left text-slate-600">
+          <thead className="sticky top-0 bg-ink-soft text-left text-muted">
             <tr>
               <th scope="col" className="px-2 py-1">Week</th>
               <th scope="col" className="px-2 py-1">Starts</th>
@@ -293,14 +293,14 @@ function CashDetails({ c, orderDate }: { c: CashResult; orderDate: string }) {
             {c.weeks.map((w) => {
               const lowest = w.week === c.lowestWeek
               return (
-                <tr key={w.week} className={lowest ? 'bg-amber-100 font-semibold' : 'border-t border-slate-100'}>
+                <tr key={w.week} className={lowest ? 'bg-accent-soft font-semibold' : 'border-t border-line/60'}>
                   <td className="px-2 py-1">{w.week}</td>
                   <td className="px-2 py-1">{shortDate(w.date)}</td>
                   <td className="px-2 py-1 text-right">{w.inflow ? usd(w.inflow) : ''}</td>
                   <td className="px-2 py-1 text-right">{w.outflow ? usd(w.outflow) : ''}</td>
                   <td className="px-2 py-1 text-right">
                     {usd(w.balance)}
-                    {lowest && <span className="ml-1 text-amber-800">Lowest</span>}
+                    {lowest && <span className="ml-1 text-accent-ink">Lowest</span>}
                   </td>
                 </tr>
               )
@@ -316,9 +316,9 @@ function ProfitCard({ s, today }: { s: TariffScenario; today: TariffScenario }) 
   const m = s.margin
   return (
     <Card title={`Profit with ${name(s.cheapest)}`}>
-      <div className="space-y-2 text-sm text-slate-700">
-        <p className="text-2xl font-bold tabular-nums text-slate-900">
-          {usd(m.margin)} <span className="text-base font-semibold text-slate-600">({pct(m.marginPct)} of sales)</span>
+      <div className="space-y-2 text-sm text-copy">
+        <p className="text-2xl font-bold tabular-nums text-ink">
+          {usd(m.margin)} <span className="text-base font-semibold text-muted">({pct(m.marginPct)} of sales)</span>
         </p>
         {vsToday(m.margin, today.margin.margin, true)}
         <p>
@@ -330,7 +330,7 @@ function ProfitCard({ s, today }: { s: TariffScenario; today: TariffScenario }) 
         <div className="overflow-x-auto">
           <table className="mb-3 w-full text-xs tabular-nums">
             <caption className="sr-only">Sales by product</caption>
-            <thead className="text-left text-slate-600">
+            <thead className="text-left text-muted">
               <tr>
                 <th scope="col" className="py-1 pr-2">Product</th>
                 <th scope="col" className="py-1 pr-2 text-right">Units</th>
@@ -341,7 +341,7 @@ function ProfitCard({ s, today }: { s: TariffScenario; today: TariffScenario }) 
             </thead>
             <tbody>
               {m.perProduct.map((p) => (
-                <tr key={p.productId} className="border-t border-slate-200">
+                <tr key={p.productId} className="border-t border-line">
                   <td className="py-1 pr-2">{p.name}</td>
                   <td className="py-1 pr-2 text-right">{num(p.qty)}</td>
                   <td className="py-1 pr-2 text-right">{usd(p.sellPrice, true)}</td>
@@ -355,13 +355,13 @@ function ProfitCard({ s, today }: { s: TariffScenario; today: TariffScenario }) 
         <dl>
           <Row label="Total sales">{usd(m.revenue)}</Row>
           <Row label={`Total cost, ${name(s.cheapest)}`}>-{usd(m.landed)}</Row>
-          <div className="mt-1 border-t border-slate-300 pt-1">
+          <div className="mt-1 border-t border-line-strong pt-1">
             <Row label="Gross profit" strong>
               {usd(m.margin)}
             </Row>
           </div>
         </dl>
-        <p className="mt-2 text-xs text-slate-500">Before returns, platform fees, and sales tax.</p>
+        <p className="mt-2 text-xs text-muted">Before returns, platform fees, and sales tax.</p>
       </Details>
     </Card>
   )
@@ -370,7 +370,7 @@ function ProfitCard({ s, today }: { s: TariffScenario; today: TariffScenario }) 
 function TariffSources() {
   return (
     <Details summary="Where do these tariffs come from?">
-      <p className="mb-1 font-medium text-slate-900">Extra tariffs, by country</p>
+      <p className="mb-1 font-medium text-ink">Extra tariffs, by country</p>
       <ul className="mb-3 space-y-1">
         {Object.entries(rates.extraTariffs).map(([country, t]) => (
           <li key={country}>
@@ -382,7 +382,7 @@ function TariffSources() {
           </li>
         ))}
       </ul>
-      <p className="mb-1 font-medium text-slate-900">Base tariffs, by product</p>
+      <p className="mb-1 font-medium text-ink">Base tariffs, by product</p>
       <ul className="mb-3 space-y-1">
         {Object.entries(rates.baseTariffs).map(([code, t]) => (
           <li key={code}>
@@ -393,7 +393,7 @@ function TariffSources() {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-slate-500">Last reviewed {niceDate(rates.lastReviewed)}. Estimates, not customs or legal advice.</p>
+      <p className="text-xs text-muted">Last reviewed {niceDate(rates.lastReviewed)}. Estimates, not customs or legal advice.</p>
     </Details>
   )
 }
@@ -401,7 +401,7 @@ function TariffSources() {
 function SourceLink({ source, url }: { source: string; url?: string }) {
   if (!url) return <>{source}</>
   return (
-    <a href={url} target="_blank" rel="noreferrer" className="text-blue-800 underline">
+    <a href={url} target="_blank" rel="noreferrer" className="text-ink underline">
       {source}
     </a>
   )

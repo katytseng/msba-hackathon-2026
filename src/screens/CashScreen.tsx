@@ -25,9 +25,9 @@ const EVENT_TERMS: Record<string, GlossaryKey> = {
   'Duty and customs fees': 'dutyPayment',
 }
 
-const LINE = '#1d4ed8' // blue-700
-const BUFFER = '#64748b' // slate-500
-const DIP = '#b45309' // amber-700
+const LINE = '#14284b' // --color-ink
+const BUFFER = '#5b6678' // --color-muted
+const DIP = '#f28c0a' // --color-accent
 
 /** A round tick step (1, 2, 2.5 or 5 times a power of ten) near the raw step. */
 function niceStep(raw: number) {
@@ -60,14 +60,14 @@ function WeekTooltip({ active, payload }: { active?: boolean; payload?: { payloa
   if (!active || !payload?.length) return null
   const w = payload[0].payload
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-3 text-xs shadow-md">
-      <p className="font-semibold text-slate-900">
+    <div className="rounded-md border border-line bg-surface p-3 text-xs shadow-md">
+      <p className="font-semibold text-ink">
         Week {w.week} · {shortDate(w.date)}
       </p>
-      <p className="tabular-nums text-slate-700">Balance at week end: {usd(w.balance)}</p>
-      {w.inflow > 0 && <p className="tabular-nums text-slate-600">Sales in: {usd(w.inflow)}</p>}
+      <p className="tabular-nums text-copy">Balance at week end: {usd(w.balance)}</p>
+      {w.inflow > 0 && <p className="tabular-nums text-muted">Sales in: {usd(w.inflow)}</p>}
       {w.events.map((e) => (
-        <p key={e.label} className="tabular-nums text-slate-600">
+        <p key={e.label} className="tabular-nums text-muted">
           {e.label}: {usd(e.amount)}
         </p>
       ))}
@@ -178,13 +178,13 @@ export default function CashScreen() {
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={shownWeeks} margin={{ top: 24, right: 24, bottom: 8, left: 8 }}>
-                    <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                    <CartesianGrid stroke="#eceae4" vertical={false} />
                     {cash.shortfall > 0 && (
                       <ReferenceArea
                         x1={cash.weeks.find((w) => w.balance < inputs.business.buffer)?.week}
                         x2={[...cash.weeks].reverse().find((w) => w.balance < inputs.business.buffer)?.week}
-                        fill="#fde68a"
-                        fillOpacity={0.35}
+                        fill="#f28c0a"
+                        fillOpacity={0.1}
                         ifOverflow="extendDomain"
                       />
                     )}
@@ -192,16 +192,16 @@ export default function CashScreen() {
                       dataKey="week"
                       tickFormatter={xTick}
                       minTickGap={xUnit === 'dates' ? 20 : 5}
-                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      tick={{ fontSize: 12, fill: '#5b6678' }}
                       tickLine={false}
-                      axisLine={{ stroke: '#cbd5e1' }}
+                      axisLine={{ stroke: '#cfd6e0' }}
                     />
                     <YAxis
                       domain={yDomain}
                       ticks={yTicks}
                       allowDataOverflow={!!yDomain}
                       tickFormatter={(v: number) => kUsd(v, yStep)}
-                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      tick={{ fontSize: 12, fill: '#5b6678' }}
                       tickLine={false}
                       axisLine={false}
                       width={56}
@@ -212,12 +212,12 @@ export default function CashScreen() {
                       ifOverflow="hidden"
                       stroke={BUFFER}
                       strokeDasharray="6 4"
-                      label={{ value: `Safety buffer ${usd(inputs.business.buffer)}`, position: 'insideTopRight', fontSize: 12, fill: '#475569' }}
+                      label={{ value: `Safety buffer ${usd(inputs.business.buffer)}`, position: 'insideTopRight', fontSize: 12, fill: '#334155' }}
                     />
                     <ReferenceLine
                       x={cash.salesStartWeek}
-                      stroke="#cbd5e1"
-                      label={{ value: 'Sales start', position: 'top', fontSize: 11, fill: '#64748b' }}
+                      stroke="#cfd6e0"
+                      label={{ value: 'Sales start', position: 'top', fontSize: 11, fill: '#5b6678' }}
                     />
                     <Line type="linear" dataKey="balance" stroke={LINE} strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={!reducedMotion}
                       animationDuration={250}
@@ -230,12 +230,12 @@ export default function CashScreen() {
                       fill={DIP}
                       stroke="#fff"
                       strokeWidth={2}
-                      label={{ value: `Lowest ${usd(cash.lowest)}`, position: 'right', dy: -14, fontSize: 12, fill: '#92400e', fontWeight: 600 }}
+                      label={{ value: `Lowest ${usd(cash.lowest)}`, position: 'right', dy: -14, fontSize: 12, fill: '#9a5200', fontWeight: 600 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                 <span>
                   {cash.shortfall > 0 ? 'Shaded weeks are below your safety buffer. ' : ''}
                   Sales start the first full week after arrival<Info term="salesStart" />. 
@@ -248,7 +248,7 @@ export default function CashScreen() {
             <Card title="Payments for this order">
               <table className="w-full text-sm tabular-nums">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
                     <th className="py-2 text-left">When</th>
                     <th className="py-2 text-left">What</th>
                     <th className="py-2 text-right">Amount</th>
@@ -256,9 +256,9 @@ export default function CashScreen() {
                 </thead>
                 <tbody>
                   {cash.events.map((e) => (
-                    <tr key={e.label} className="border-b border-slate-100">
+                    <tr key={e.label} className="border-b border-line/60">
                       <td className="py-2">
-                        Day {e.day} <span className="text-slate-500">({niceDate(addDays(inputs.business.orderDate, e.day))}, week {Math.floor(e.day / 7)})</span>
+                        Day {e.day} <span className="text-muted">({niceDate(addDays(inputs.business.orderDate, e.day))}, week {Math.floor(e.day / 7)})</span>
                       </td>
                       <td className="py-2">
                         {e.label}
@@ -279,13 +279,13 @@ export default function CashScreen() {
 
 function Stat({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: GlossaryKey }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="flex items-center text-xs font-medium uppercase tracking-wide text-slate-500">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
+      <p className="flex items-center text-xs font-medium uppercase tracking-wide text-muted">
         {label}
         {info && <Info term={info} />}
       </p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
-      {sub && <p className="text-xs text-slate-500">{sub}</p>}
+      <p className="mt-1 text-2xl font-bold tabular-nums text-ink">{value}</p>
+      {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>
   )
 }

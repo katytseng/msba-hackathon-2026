@@ -33,7 +33,7 @@ export default function CompareScreen() {
           <div className="overflow-x-auto">
             <table className="w-full whitespace-nowrap text-sm tabular-nums">
               <thead>
-                <tr className="border-b border-slate-200 text-right text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-line text-right text-xs uppercase tracking-wide text-muted">
                   <th className="py-2 pr-4 text-center">Select</th>
                   <th className="py-2 pr-3 text-left">Supplier</th>
                   <th className="py-2 pr-3">Product cost<Info term="productCost" /></th>
@@ -52,7 +52,7 @@ export default function CompareScreen() {
                   const sup = inputs.suppliers.find((s) => s.id === r.supplierId)
                   const tariff = r.baseDuty + r.extraDuty
                   return (
-                    <tr key={r.supplierId} className={`border-b border-slate-100 text-right ${isCheapest ? 'bg-emerald-50' : ''}`}>
+                    <tr key={r.supplierId} className={`border-b border-line/60 text-right ${isCheapest ? 'bg-emerald-50' : ''}`}>
                       <td className="py-3 pr-4 text-center">
                         <label className="inline-flex cursor-pointer">
                           <input
@@ -65,8 +65,8 @@ export default function CompareScreen() {
                           />
                           <span
                             aria-hidden
-                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold text-white transition peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${
-                              isChosen ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300 bg-white hover:border-emerald-500'
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold text-white transition peer-focus-visible:ring-2 peer-focus-visible:ring-ink peer-focus-visible:ring-offset-2 ${
+                              isChosen ? 'border-emerald-600 bg-emerald-600' : 'border-line-strong bg-surface hover:border-emerald-500'
                             }`}
                           >
                             {isChosen && '✓'}
@@ -74,24 +74,24 @@ export default function CompareScreen() {
                         </label>
                       </td>
                       <td className="py-3 pr-3 text-left">
-                        <div className="font-semibold text-slate-900">
-                          {r.rank}. {r.supplierName} <span className="font-normal text-slate-500">({r.country})</span>
+                        <div className="font-semibold text-ink">
+                          {r.rank}. {r.supplierName} <span className="font-normal text-muted">({r.country})</span>
                         </div>
                         {isCheapest ? (
                           <span className="mt-1 inline-block rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">Cheapest</span>
                         ) : (
-                          <span className="text-xs text-slate-500">+{usd(r.gapToCheapest, true)} vs cheapest</span>
+                          <span className="text-xs text-muted">+{usd(r.gapToCheapest, true)} vs cheapest</span>
                         )}
                       </td>
                       <td className="py-3 pr-3">{usd(r.customsValue)}</td>
                       <td className="py-3 pr-3">
                         {usd(tariff)}
-                        <div className="text-xs text-slate-500">{r.customsValue > 0 ? `${pct(tariff / r.customsValue)} of value` : ''}</div>
+                        <div className="text-xs text-muted">{r.customsValue > 0 ? `${pct(tariff / r.customsValue)} of value` : ''}</div>
                         <Collapse open={details}>
-                          <div className="mt-1 space-y-0.5 border-t border-slate-200 pt-1 text-xs text-slate-600">
+                          <div className="mt-1 space-y-0.5 border-t border-line pt-1 text-xs text-muted">
                             <div>Base {usd(r.baseDuty)}</div>
                             <div>
-                              + Extra {usd(r.extraDuty)} <span className="text-slate-400">({pct(r.extraRate)})</span>
+                              + Extra {usd(r.extraDuty)} <span className="text-muted">({pct(r.extraRate)})</span>
                             </div>
                           </div>
                         </Collapse>
@@ -103,14 +103,14 @@ export default function CompareScreen() {
                           <>
                             {sup.leadTimeDays + sup.transitDays} days
                             <Collapse open={details}>
-                              <div className="mt-1 border-t border-slate-200 pt-1 text-xs text-slate-600">
+                              <div className="mt-1 border-t border-line pt-1 text-xs text-muted">
                                 {sup.leadTimeDays} lead + {sup.transitDays} transit
                               </div>
                             </Collapse>
                           </>
                         )}
                       </td>
-                      <td className="py-3 pr-3 font-semibold text-slate-900">{usd(r.total, true)}</td>
+                      <td className="py-3 pr-3 font-semibold text-ink">{usd(r.total, true)}</td>
                       <td className="py-3">{usd(r.avgUnit, true)}</td>
                     </tr>
                   )
@@ -118,7 +118,7 @@ export default function CompareScreen() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-slate-500">Customs fees = merchandise processing fee + harbor maintenance fee + broker. Tariffs are charged on product value only (FOB). Time to arrive = supplier lead time + transit.</p>
+          <p className="mt-3 text-xs text-muted">Customs fees = merchandise processing fee + harbor maintenance fee + broker. Tariffs are charged on product value only (FOB). Time to arrive = supplier lead time + transit.</p>
         </Card>
 
         {chosen && (
@@ -126,7 +126,7 @@ export default function CompareScreen() {
             <div className="overflow-x-auto">
               <table className="w-full whitespace-nowrap text-sm tabular-nums">
                 <thead>
-                  <tr className="border-b border-slate-200 text-right text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-line text-right text-xs uppercase tracking-wide text-muted">
                     <th className="py-2 pr-3 text-left">Product</th>
                     <th className="py-2 pr-3">Qty<Info term="qty" /></th>
                     <th className="py-2 pr-3">Quote<Info term="unitPrice" /></th>
@@ -138,27 +138,27 @@ export default function CompareScreen() {
                 </thead>
                 <tbody>
                   {chosen.perProduct.map((p) => (
-                    <tr key={p.productId} className="border-b border-slate-100 text-right">
+                    <tr key={p.productId} className="border-b border-line/60 text-right">
                       <td className="py-2 pr-3 text-left">{p.name}</td>
                       <td className="py-2 pr-3">{p.qty.toLocaleString()}</td>
                       <td className="py-2 pr-3">{usd(p.unitPrice, true)}</td>
                       <td className="py-2 pr-3">
                         {pct(p.baseRate + chosen.extraRate)}
                         <Collapse open={details}>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted">
                             {pct(p.baseRate)} base + {pct(chosen.extraRate)} extra
                           </div>
                         </Collapse>
                       </td>
                       <td className="py-2 pr-3 font-semibold">{usd(p.landedUnit, true)}</td>
-                      <td className="py-2 pr-3 text-slate-600">{p.unitPrice > 0 ? `+${pct(p.landedUnit / p.unitPrice - 1, 0)}` : ''}</td>
+                      <td className="py-2 pr-3 text-muted">{p.unitPrice > 0 ? `+${pct(p.landedUnit / p.unitPrice - 1, 0)}` : ''}</td>
                       <td className="py-2">{usd(p.landedTotal)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-xs text-slate-500">Freight, customs fees and broker are spread across products by their share of product value.</p>
+            <p className="mt-3 text-xs text-muted">Freight, customs fees and broker are spread across products by their share of product value.</p>
           </Card>
         )}
       </NeedsData>

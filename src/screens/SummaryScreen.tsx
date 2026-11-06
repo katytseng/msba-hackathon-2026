@@ -33,9 +33,9 @@ export default function SummaryScreen() {
             <AiExplanation />
             <div className="mb-5 grid gap-5 md:grid-cols-2">
               <Card title="This order">
-                <p className="mb-3 text-sm text-slate-700">{supplierSentence(ranked)}</p>
+                <p className="mb-3 text-sm text-copy">{supplierSentence(ranked)}</p>
                 {chosen.rank !== 1 && (
-                  <p className="mb-3 text-sm text-slate-700">
+                  <p className="mb-3 text-sm text-copy">
                     You picked {chosen.supplierName} ({chosen.country}) at {usd(chosen.total, true)}, {usd(chosen.gapToCheapest, true)} more than the cheapest.
                   </p>
                 )}
@@ -71,7 +71,7 @@ export default function SummaryScreen() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                       <th className="py-2 pr-3">Rate</th>
                       <th className="py-2 pr-3 text-right">Value</th>
                       <th className="py-2 pr-3">Source</th>
@@ -109,15 +109,15 @@ export default function SummaryScreen() {
             </Card>
 
             <Card title="Assumptions" className="mb-5">
-              <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
+              <ul className="list-disc space-y-1 pl-5 text-sm text-copy">
                 {ASSUMPTIONS.map((a) => (
                   <li key={a}>{a}</li>
                 ))}
               </ul>
             </Card>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-slate-300 bg-white p-4">
-              <p className="font-semibold text-slate-900">{DISCLAIMER}</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-line-strong bg-surface p-4">
+              <p className="font-semibold text-ink">{DISCLAIMER}</p>
               <Button variant="secondary" className="no-print" onClick={() => window.print()}>
                 Print
               </Button>
@@ -132,30 +132,30 @@ export default function SummaryScreen() {
 function Item({ label, value, info }: { label: string; value: string; info?: GlossaryKey }) {
   return (
     <div>
-      <dt className="flex items-center text-xs uppercase tracking-wide text-slate-500">
+      <dt className="flex items-center text-xs uppercase tracking-wide text-muted">
         {label}
         {info && <Info term={info} />}
       </dt>
-      <dd className="font-semibold tabular-nums text-slate-900">{value}</dd>
+      <dd className="font-semibold tabular-nums text-ink">{value}</dd>
     </div>
   )
 }
 
 function Row({ name, value, source, url, date }: { name: string; value: string; source: string; url?: string; date: string }) {
   return (
-    <tr className="border-b border-slate-100 align-top">
+    <tr className="border-b border-line/60 align-top">
       <td className="py-2 pr-3">{name}</td>
       <td className="py-2 pr-3 text-right tabular-nums">{value}</td>
-      <td className="py-2 pr-3 text-slate-600">
+      <td className="py-2 pr-3 text-muted">
         {url ? (
-          <a href={url} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+          <a href={url} target="_blank" rel="noreferrer" className="text-ink underline">
             {source}
           </a>
         ) : (
           source
         )}
       </td>
-      <td className="py-2 whitespace-nowrap text-slate-600">{niceDate(date)}</td>
+      <td className="py-2 whitespace-nowrap text-muted">{niceDate(date)}</td>
     </tr>
   )
 }

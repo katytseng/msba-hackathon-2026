@@ -43,7 +43,7 @@ export default function SuppliersScreen() {
 
       {products.length === 0 && (
         <Card className="mb-5">
-          <p className="text-slate-600">Add products on the Business step first, or click <b>Reset to sample</b>.</p>
+          <p className="text-muted">Add products on the Business step first, or click <b>Reset to sample</b>.</p>
         </Card>
       )}
 
@@ -58,19 +58,19 @@ export default function SuppliersScreen() {
             <Card key={s.id}>
               <div className="mb-3 flex items-center gap-2">
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1 font-semibold"
+                  className="w-full rounded-md border border-line-strong px-2 py-1 font-semibold"
                   value={s.name}
                   onChange={(e) => setSupplier(s.id, { name: e.target.value })}
                 />
                 <Button variant="danger" onClick={() => removeSupplier(s.id)}>Remove</Button>
               </div>
 
-              <label className="mb-1 flex items-center text-sm font-medium text-slate-700">
+              <label className="mb-1 flex items-center text-sm font-medium text-copy">
                 Ships from
                 <Info term="country" />
               </label>
               <select
-                className="mb-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                className="mb-1 w-full rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm"
                 value={s.country}
                 onChange={(e) => setSupplier(s.id, { country: e.target.value })}
               >
@@ -78,29 +78,29 @@ export default function SuppliersScreen() {
                   <option key={c}>{c}</option>
                 ))}
               </select>
-              <div className="mb-4 mt-2 rounded-lg bg-slate-50 p-3 text-sm">
+              <div className="mb-4 mt-2 rounded-lg bg-page p-3 text-sm">
                 {r && r.customsValue > 0 ? (
                   <>
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="flex items-center font-medium text-slate-700">
+                      <span className="flex items-center font-medium text-copy">
                         Tariffs on this quote
                         <Info term="totalTariff" />
                       </span>
-                      <span className="font-semibold tabular-nums text-slate-900">{usd(tariff)}</span>
+                      <span className="font-semibold tabular-nums text-ink">{usd(tariff)}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-slate-500">{pct(tariff / r.customsValue)} of product value</span>
+                      <span className="text-xs text-muted">{pct(tariff / r.customsValue)} of product value</span>
                       <DetailsToggle open={showDetails} controls={detailsId} onToggle={() => setOpenTariff((o) => ({ ...o, [s.id]: !o[s.id] }))} />
                     </div>
                     <Collapse open={showDetails} id={detailsId}>
-                      <dl className="mt-2 space-y-1 border-t border-slate-200 pt-2 text-xs tabular-nums text-slate-600">
+                      <dl className="mt-2 space-y-1 border-t border-line pt-2 text-xs tabular-nums text-muted">
                         <div className="flex justify-between gap-2">
                           <dt className="flex items-center">
                             Base tariff (HTS)
                             <Info term="htsDuty" />
                           </dt>
                           <dd>
-                            {usd(r.baseDuty)} <span className="text-slate-400">· avg {pct(r.baseDuty / r.customsValue)}</span>
+                            {usd(r.baseDuty)} <span className="text-muted">· avg {pct(r.baseDuty / r.customsValue)}</span>
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
@@ -109,28 +109,28 @@ export default function SuppliersScreen() {
                             <Info term="extraTariff" />
                           </dt>
                           <dd>
-                            {usd(r.extraDuty)} <span className="text-slate-400">· {pct(r.extraRate)}</span>
+                            {usd(r.extraDuty)} <span className="text-muted">· {pct(r.extraRate)}</span>
                           </dd>
                         </div>
-                        {extra && <p className="text-slate-500">{extra.note}</p>}
+                        {extra && <p className="text-muted">{extra.note}</p>}
                       </dl>
                     </Collapse>
                   </>
                 ) : (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted">
                     {extra ? `Extra tariff from ${s.country}: ${pct(extra.rate)}. ` : ''}Enter unit prices to see total tariffs.
                   </p>
                 )}
               </div>
 
-              <p className="mb-2 flex items-center text-sm font-medium text-slate-700">
+              <p className="mb-2 flex items-center text-sm font-medium text-copy">
                 Unit price per product (FOB)
                 <Info term="unitPrice" />
               </p>
               <div className="mb-4 space-y-1.5">
                 {products.map((p) => (
                   <div key={p.id} className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm text-slate-600">{p.name}</span>
+                    <span className="truncate text-sm text-muted">{p.name}</span>
                     <NumberField compact label={`${p.name} price`} prefix="$" className="w-28" value={s.prices[p.id] ?? 0} onChange={(v) => setPrice(s, p.id, v)} />
                   </div>
                 ))}
@@ -156,7 +156,7 @@ export default function SuppliersScreen() {
 
         <button
           onClick={addSupplier}
-          className="flex min-h-40 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-blue-400 hover:text-blue-700"
+          className="flex min-h-40 items-center justify-center rounded-xl border-2 border-dashed border-line-strong text-muted hover:border-ink hover:text-ink"
         >
           + Add supplier
         </button>

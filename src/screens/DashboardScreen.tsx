@@ -58,7 +58,7 @@ export default function DashboardScreen() {
   )
 
   const pc = useMemo(() => portfolioCash(analyses.map((x) => x.a), company, startDate), [analyses, company, startDate])
-  const colorOf = (orderId: string) => analyses.find((x) => x.a.order.id === orderId)?.color ?? '#64748b'
+  const colorOf = (orderId: string) => analyses.find((x) => x.a.order.id === orderId)?.color ?? '#5b6678'
   const nameOf = (orderId: string) => analyses.find((x) => x.a.order.id === orderId)?.a.order.name ?? ''
 
   const newOrder = () => {
@@ -71,8 +71,8 @@ export default function DashboardScreen() {
       <div>
         <DashHeader onNew={newOrder} />
         <Card>
-          <p className="mb-1 font-semibold text-slate-900">No saved orders yet.</p>
-          <p className="mb-4 text-sm text-slate-600">
+          <p className="mb-1 font-semibold text-ink">No saved orders yet.</p>
+          <p className="mb-4 text-sm text-muted">
             Work through steps 1 to 5 for an order, pick a supplier, then click <b>Save order</b>. Each saved order shows up here as a lane, and all of
             them are checked against one bank balance.
           </p>
@@ -99,24 +99,24 @@ export default function DashboardScreen() {
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* Swim lanes */}
-        <section aria-label="Orders" className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
-            <h2 className="text-base font-semibold text-slate-800">
-              Orders <span className="font-normal text-slate-500">({analyses.length})</span>
+        <section aria-label="Orders" className="rounded-xl border border-line bg-surface shadow-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-4 py-3">
+            <h2 className="text-base font-semibold text-ink">
+              Orders <span className="font-normal text-muted">({analyses.length})</span>
             </h2>
-            <p className="text-xs text-slate-500">{usd(committed)} committed, at today's tariffs</p>
+            <p className="text-xs text-muted">{usd(committed)} committed, at today's tariffs</p>
           </div>
           <TimeAxis startDate={startDate} horizon={horizon} pc={pc} buffer={company.buffer} />
           {analyses.map(({ a, color }, i) => (
             <Lane key={a.order.id} a={a} index={i} color={color} startDate={startDate} horizon={horizon} pc={pc} buffer={company.buffer} />
           ))}
           {failed.map(({ order, error }) => (
-            <div key={order.id} className="border-t border-slate-200 px-4 py-3 text-sm text-red-700">
+            <div key={order.id} className="border-t border-line px-4 py-3 text-sm text-red-700">
               {order.name}: can't calculate ({error}).
             </div>
           ))}
-          <div className="border-t border-slate-200 px-4 py-3">
-            <button onClick={newOrder} className="text-sm font-medium text-blue-700 hover:underline">
+          <div className="border-t border-line px-4 py-3">
+            <button onClick={newOrder} className="text-sm font-medium text-ink hover:underline">
               + Add another order
             </button>
           </div>
@@ -135,9 +135,9 @@ function DashHeader({ onNew }: { onNew: () => void }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Dashboard</p>
-        <h1 className="text-2xl font-bold text-slate-900">Your orders and cash</h1>
-        <p className="mt-1 text-slate-600">Your placed orders on one timeline and one bank balance, plus a tariff planner for what to order next.</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Dashboard</p>
+        <h1 className="text-2xl font-bold text-ink">Your orders and cash</h1>
+        <p className="mt-1 text-muted">Your placed orders on one timeline and one bank balance, plus a tariff planner for what to order next.</p>
       </div>
       <Button onClick={onNew}>+ New order</Button>
     </div>
@@ -155,33 +155,33 @@ function Verdict({ pc, company }: { pc: PortfolioCash; company: { buffer: number
   if (pc.shortfall > 0) {
     const line = Math.ceil(pc.shortfall / 1000) * 1000
     return (
-      <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4" aria-live="polite">
+      <div className="mb-5 rounded-xl border border-accent/40 bg-accent-soft p-4" aria-live="polite">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <p className="text-xl font-bold text-slate-900">
-            <span aria-hidden className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-sm text-white">!</span>
+          <p className="text-xl font-bold text-ink">
+            <span aria-hidden className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-sm text-white">!</span>
             Borrow about {usd(line)}{first ? ` by ${niceDate(first.date)}` : ''}.
           </p>
-          <p className="text-sm text-slate-700">Est. interest {usd(pc.interest)} at {pct(company.apr, 0)} APR</p>
+          <p className="text-sm text-copy">Est. interest {usd(pc.interest)} at {pct(company.apr, 0)} APR</p>
         </div>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-1 text-sm text-copy">
           Your cash falls to <b>{usd(pc.lowest)}</b> in the week of {niceDate(low.date)}, {usd(pc.shortfall)} below your {usd(company.buffer)} safety buffer
           {pc.goesNegative ? ' and below zero' : ''}. You are under the buffer for {pc.weeksBelowBuffer} {pc.weeksBelowBuffer === 1 ? 'week' : 'weeks'} in total
           {back ? `, and back above it for good around ${niceDate(back.date)}, when you can repay` : ', and do not recover within the plan'}.
         </p>
-        <p className="mt-1 text-xs text-slate-500">{basis}</p>
+        <p className="mt-1 text-xs text-muted">{basis}</p>
       </div>
     )
   }
   return (
     <div className="mb-5 rounded-xl border border-emerald-300 bg-emerald-50 p-4" aria-live="polite">
-      <p className="text-xl font-bold text-slate-900">
+      <p className="text-xl font-bold text-ink">
         <span aria-hidden className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-sm text-white">✓</span>
         No loan needed.
       </p>
-      <p className="mt-1 text-sm text-slate-700">
+      <p className="mt-1 text-sm text-copy">
         Lowest balance is <b>{usd(pc.lowest)}</b> in the week of {niceDate(low.date)}, {usd(pc.lowest - company.buffer)} above your {usd(company.buffer)} safety buffer.
       </p>
-      <p className="mt-1 text-xs text-slate-500">{basis}</p>
+      <p className="mt-1 text-xs text-muted">{basis}</p>
     </div>
   )
 }
@@ -211,7 +211,7 @@ function DipShading({ pc, buffer, horizon }: { pc: PortfolioCash; buffer: number
           <div
             key={a}
             aria-hidden
-            className="absolute inset-y-0 bg-amber-200/40"
+            className="absolute inset-y-0 bg-accent/10"
             style={{ left: posPct(a, horizon), width: `calc(${posPct(Math.min(b, horizon), horizon)} - ${posPct(a, horizon)})` }}
           />
         ) : null,
@@ -233,7 +233,7 @@ function TimeAxis({ startDate, horizon, pc, buffer }: { startDate: string; horiz
   }
   const hasDip = pc.shortfall > 0
   return (
-    <div className="flex border-b border-slate-200 bg-slate-50 text-[11px] text-slate-500">
+    <div className="flex border-b border-line bg-page text-[11px] text-muted">
       <div className={LABEL_COL} />
       <div className="px-4 py-1.5 flex-1">
         <div className="relative h-4">
@@ -246,7 +246,7 @@ function TimeAxis({ startDate, horizon, pc, buffer }: { startDate: string; horiz
         </div>
         {hasDip && (
           <p className="mt-0.5 flex items-center gap-1.5">
-            <span aria-hidden className="inline-block h-2.5 w-4 rounded-sm bg-amber-200" /> Weeks your combined cash is under the {usd(buffer)} buffer
+            <span aria-hidden className="inline-block h-2.5 w-4 rounded-sm bg-accent/25" /> Weeks your combined cash is under the {usd(buffer)} buffer
           </p>
         )}
       </div>
@@ -285,17 +285,17 @@ function Lane({
   const maxPay = Math.max(...sameDay(a).map((g) => g.total), 1)
 
   return (
-    <div className="flex border-t border-slate-200 first-of-type:border-t-0">
+    <div className="flex border-t border-line first-of-type:border-t-0">
       {/* Vertical lane label, like the wireframe */}
-      <div className={`${LABEL_COL} flex items-center justify-center border-l-4 border-r border-r-slate-200`} style={{ borderLeftColor: color, background: `${color}1f` }}>
-        <span className="rotate-180 text-[11px] font-semibold uppercase tracking-wider text-slate-700 [writing-mode:vertical-rl]">Order {index + 1}</span>
+      <div className={`${LABEL_COL} flex items-center justify-center border-l-4 border-r border-r-line`} style={{ borderLeftColor: color, background: `${color}1f` }}>
+        <span className="rotate-180 text-[11px] font-semibold uppercase tracking-wider text-copy [writing-mode:vertical-rl]">Order {index + 1}</span>
       </div>
 
       <div className="min-w-0 flex-1 px-4 py-3">
         <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="truncate font-semibold text-slate-900">{o.name}</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="truncate font-semibold text-ink">{o.name}</h3>
+            <p className="text-xs text-muted">
               Ordered {niceDate(o.inputs.business.orderDate)} · {num(p.units)} units · arrives {shortDate(addDays(o.inputs.business.orderDate, a.cash.arrivalDay))}
             </p>
           </div>
@@ -327,7 +327,7 @@ function Lane({
           </div>
         </div>
 
-        <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-slate-50 px-3 py-2 text-sm sm:grid-cols-4">
+        <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-page px-3 py-2 text-sm sm:grid-cols-4">
           <LaneFact label="Supplier" value={supplierLabel(p)} />
           <LaneFact label="Landed cost" value={usd(p.total)} />
           <LaneFact label="Per unit" value={usd(p.avgUnit, true)} />
@@ -335,23 +335,23 @@ function Lane({
         </dl>
 
         {/* Timeline strip on the shared axis */}
-        <div className="relative h-12 rounded-md bg-slate-50" role="img" aria-label={laneSummary(a, startDate)}>
+        <div className="relative h-12 rounded-md bg-page" role="img" aria-label={laneSummary(a, startDate)}>
           <DipShading pc={pc} buffer={buffer} horizon={horizon} />
           {/* order placed -> arrival */}
-          <div className="absolute top-[18px] h-0.5 bg-slate-300" style={{ left: posPct(off, horizon), width: `calc(${posPct(arrival, horizon)} - ${posPct(off, horizon)})` }} />
+          <div className="absolute top-[18px] h-0.5 bg-line-strong" style={{ left: posPct(off, horizon), width: `calc(${posPct(arrival, horizon)} - ${posPct(off, horizon)})` }} />
           {/* selling period */}
           <div
             className="absolute top-[14px] h-2.5 rounded-r-full opacity-30"
             style={{ background: color, left: posPct(salesStart, horizon), width: `calc(${posPct(Math.min(sellOut, horizon), horizon)} - ${posPct(salesStart, horizon)})` }}
           />
           {salesStart < horizon && (
-            <span className="absolute top-[28px] whitespace-nowrap text-[10px] text-slate-500" style={{ left: posPct(salesStart, horizon) }}>
+            <span className="absolute top-[28px] whitespace-nowrap text-[10px] text-muted" style={{ left: posPct(salesStart, horizon) }}>
               selling{sellOut > horizon ? ` until ${shortDate(addDays(startDate, sellOut))} →` : ''}
             </span>
           )}
           {/* arrival */}
           <Marker day={arrival} horizon={horizon} tip={`Arrives ${niceDate(addDays(startDate, arrival))}`}>
-            <span className="block h-3 w-3 rotate-45 border-2 border-white bg-slate-600" />
+            <span className="block h-3 w-3 rotate-45 border-2 border-white bg-muted" />
           </Marker>
           {/* payments, sized by amount */}
           {sameDay(a).map(({ day, total, labels }) => {
@@ -363,7 +363,7 @@ function Lane({
             )
           })}
         </div>
-        <p className="mt-1 text-[11px] text-slate-500">
+        <p className="mt-1 text-[11px] text-muted">
           Dots are payments (bigger = more cash out). Diamond is arrival. Hover for amounts.
         </p>
       </div>
@@ -374,8 +374,8 @@ function Lane({
 function LaneFact({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="truncate font-medium tabular-nums text-slate-900">{value}</dd>
+      <dt className="text-[11px] uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="truncate font-medium tabular-nums text-ink">{value}</dd>
     </div>
   )
 }
@@ -402,7 +402,7 @@ function Marker({ day, horizon, tip, children }: { day: number; horizon: number;
   return (
     <div className="group absolute top-[19px] z-10 -translate-x-1/2 -translate-y-1/2 p-1.5" style={{ left: posPct(day, horizon) }}>
       {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 shadow-md group-hover:block">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs text-ink shadow-md group-hover:block">
         {tip}
       </span>
     </div>
@@ -429,7 +429,7 @@ function TariffPanel({
 
   return (
     <Card title="Tariffs: plan your next orders">
-      <p className="-mt-2 mb-3 text-xs text-slate-500">
+      <p className="-mt-2 mb-3 text-xs text-muted">
         Placed orders stay as they are. Set the tariffs you expect and see who to order from if you buy the same items again.
       </p>
       <div className="space-y-3">
@@ -441,12 +441,12 @@ function TariffPanel({
           return (
             <div key={c}>
               <div className="flex items-baseline justify-between text-sm">
-                <label htmlFor={`dash-tariff-${c}`} className="font-medium text-slate-800">
+                <label htmlFor={`dash-tariff-${c}`} className="font-medium text-ink">
                   {c}
                 </label>
                 <span className="tabular-nums">
-                  <b className={changed ? 'text-blue-800' : 'text-slate-900'}>{pct(r)}</b>
-                  <span className="ml-1.5 text-xs text-slate-500">today {pct(today)}</span>
+                  <b className={changed ? 'text-ink' : 'text-ink'}>{pct(r)}</b>
+                  <span className="ml-1.5 text-xs text-muted">today {pct(today)}</span>
                 </span>
               </div>
               <input
@@ -458,7 +458,7 @@ function TariffPanel({
                 value={r * 100}
                 aria-valuetext={pct(r)}
                 onChange={(e) => setRate(c, parseFloat(e.target.value) / 100)}
-                className="w-full accent-blue-700"
+                className="w-full accent-ink"
               />
             </div>
           )
@@ -476,9 +476,9 @@ function TariffPanel({
         </Button>
       </div>
 
-      <div className="mt-4 border-t border-slate-200 pt-3" aria-live="polite">
-        <p className="text-sm font-semibold text-slate-900">If you reorder {moved ? 'at these tariffs' : 'at today’s tariffs'}</p>
-        <p className="mb-2 text-xs text-slate-500">
+      <div className="mt-4 border-t border-line pt-3" aria-live="polite">
+        <p className="text-sm font-semibold text-ink">If you reorder {moved ? 'at these tariffs' : 'at today’s tariffs'}</p>
+        <p className="mb-2 text-xs text-muted">
           {changes.length === 0
             ? 'Stay with the same supplier for every order.'
             : `Use a different supplier for ${changes.length} of ${advice.length} ${advice.length === 1 ? 'order' : 'orders'}.`}
@@ -487,24 +487,24 @@ function TariffPanel({
           {advice.map(({ r, color }) => {
             const better = r.savings > 0.5
             return (
-              <li key={r.order.id} className={`rounded-md border px-3 py-2 text-sm ${better ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
-                <p className="flex items-center gap-1.5 text-xs text-slate-500">
+              <li key={r.order.id} className={`rounded-md border px-3 py-2 text-sm ${better ? 'border-accent/40 bg-accent-soft' : 'border-line bg-surface'}`}>
+                <p className="flex items-center gap-1.5 text-xs text-muted">
                   <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
                   <span className="truncate">{r.order.name}</span>
                 </p>
                 {better ? (
                   <>
-                    <p className="font-medium text-slate-900">
-                      Order from {supplierLabel(r.best)} <span className="font-normal text-slate-500">instead of {r.same.supplierName}</span>
+                    <p className="font-medium text-ink">
+                      Order from {supplierLabel(r.best)} <span className="font-normal text-muted">instead of {r.same.supplierName}</span>
                     </p>
-                    <p className="text-xs tabular-nums text-slate-700">
+                    <p className="text-xs tabular-nums text-copy">
                       {usd(r.best.total)}, saves <b>{usd(r.savings)}</b>
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-slate-900">✓ Stay with {supplierLabel(r.best)}</p>
-                    <p className="text-xs tabular-nums text-slate-700">
+                    <p className="font-medium text-ink">✓ Stay with {supplierLabel(r.best)}</p>
+                    <p className="text-xs tabular-nums text-copy">
                       {usd(r.best.total)}
                       {r.ranked[1] ? `, ${usd(r.ranked[1].total - r.best.total)} less than ${r.ranked[1].supplierName}` : ''}
                     </p>
@@ -556,37 +556,37 @@ function CashPanel({
 
   return (
     <Card title="Cash flow">
-      <p className="-mt-2 mb-2 text-xs text-slate-500">Placed orders, one bank balance.</p>
+      <p className="-mt-2 mb-2 text-xs text-muted">Placed orders, one bank balance.</p>
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={shown} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#e2e8f0" vertical={false} />
+            <CartesianGrid stroke="#eceae4" vertical={false} />
             {dips
               .filter(([a]) => a < end)
               .map(([a, b]) => (
-                <ReferenceArea key={a} x1={a} x2={Math.min(b, end - 1)} fill="#fde68a" fillOpacity={0.5} ifOverflow="hidden" />
+                <ReferenceArea key={a} x1={a} x2={Math.min(b, end - 1)} fill="#f28c0a" fillOpacity={0.12} ifOverflow="hidden" />
               ))}
             <XAxis
               dataKey="week"
               tickFormatter={(w) => shortDate(pc.weeks[w]?.date ?? pc.startDate)}
-              tick={{ fontSize: 11, fill: '#64748b' }}
+              tick={{ fontSize: 11, fill: '#5b6678' }}
               tickLine={false}
-              axisLine={{ stroke: '#cbd5e1' }}
+              axisLine={{ stroke: '#cfd6e0' }}
               minTickGap={24}
             />
-            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000)}k`} tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} width={44} />
+            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000)}k`} tick={{ fontSize: 11, fill: '#5b6678' }} tickLine={false} axisLine={false} width={44} />
             <Tooltip content={<WeekTip nameOf={nameOf} colorOf={colorOf} />} cursor={{ stroke: '#94a3b8', strokeWidth: 1 }} />
-            <ReferenceLine y={company.buffer} stroke="#64748b" strokeDasharray="6 4" label={{ value: `Buffer ${usd(company.buffer)}`, position: 'insideBottomLeft', fontSize: 11, fill: '#475569' }} />
+            <ReferenceLine y={company.buffer} stroke="#5b6678" strokeDasharray="6 4" label={{ value: `Buffer ${usd(company.buffer)}`, position: 'insideBottomLeft', fontSize: 11, fill: '#334155' }} />
             {pc.goesNegative && <ReferenceLine y={0} stroke="#b91c1c" />}
-            <Line type="linear" dataKey="balance" stroke="#1d4ed8" strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
-            {pc.lowestWeek < end && <ReferenceDot x={pc.lowestWeek} y={pc.lowest} r={5} fill="#b45309" stroke="#fff" strokeWidth={2} />}
+            <Line type="linear" dataKey="balance" stroke="#14284b" strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
+            {pc.lowestWeek < end && <ReferenceDot x={pc.lowestWeek} y={pc.lowest} r={5} fill="#f28c0a" stroke="#fff" strokeWidth={2} />}
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="mb-3 flex justify-between gap-2 text-[11px] text-slate-500">
+      <div className="mb-3 flex justify-between gap-2 text-[11px] text-muted">
         <span>Combined balance, end of each week.{dips.length > 0 ? ' Shaded: under buffer.' : ''}</span>
         {pc.weeks.length > end || showAll ? (
-          <button className="shrink-0 whitespace-nowrap font-medium text-blue-700 underline" onClick={() => setShowAll(!showAll)}>
+          <button className="shrink-0 whitespace-nowrap font-medium text-ink underline" onClick={() => setShowAll(!showAll)}>
             {showAll ? 'Zoom to the risk period' : 'Show the full plan'}
           </button>
         ) : null}
@@ -604,17 +604,17 @@ function CashPanel({
 
       {drivers.length > 0 && (
         <div className="mb-3">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Biggest payments before the low point</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">Biggest payments before the low point</p>
           <ul className="space-y-1 text-xs">
             {drivers.map((e, i) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorOf(e.orderId) }} />
-                  <span className="truncate text-slate-700">
+                  <span className="truncate text-copy">
                     {nameOf(e.orderId)}: {e.label.toLowerCase()}, {shortDate(addDays(pc.startDate, e.day))}
                   </span>
                 </span>
-                <span className="tabular-nums text-slate-900">{usd(-e.amount)}</span>
+                <span className="tabular-nums text-ink">{usd(-e.amount)}</span>
               </li>
             ))}
           </ul>
@@ -622,7 +622,7 @@ function CashPanel({
       )}
 
       <Details summary="Company cash settings">
-        <p className="mb-2 text-xs text-slate-500">All orders draw on this one balance, starting {niceDate(pc.startDate)} (your earliest order).</p>
+        <p className="mb-2 text-xs text-muted">All orders draw on this one balance, starting {niceDate(pc.startDate)} (your earliest order).</p>
         <div className="grid grid-cols-3 gap-2">
           <NumberField label="Cash" prefix="$" value={company.cash} onChange={(v) => setCompany({ cash: v })} />
           <NumberField label="Buffer" prefix="$" value={company.buffer} onChange={(v) => setCompany({ buffer: v })} />
@@ -636,10 +636,10 @@ function CashPanel({
 
 function Stat({ label, value, sub, warn }: { label: string; value: string; sub: string; warn: boolean }) {
   return (
-    <div className="rounded-md bg-slate-50 px-3 py-2">
-      <dt className="text-[11px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className={`text-lg font-bold tabular-nums ${warn ? 'text-amber-800' : 'text-slate-900'}`}>{value}</dd>
-      <dd className="text-[11px] text-slate-500">{sub}</dd>
+    <div className="rounded-md bg-page px-3 py-2">
+      <dt className="text-[11px] uppercase tracking-wide text-muted">{label}</dt>
+      <dd className={`text-lg font-bold tabular-nums ${warn ? 'text-accent-ink' : 'text-ink'}`}>{value}</dd>
+      <dd className="text-[11px] text-muted">{sub}</dd>
     </div>
   )
 }
@@ -648,12 +648,12 @@ function WeekTip({ active, payload, nameOf, colorOf }: { active?: boolean; paylo
   if (!active || !payload?.length) return null
   const w = payload[0].payload
   return (
-    <div className="max-w-64 rounded-md border border-slate-200 bg-white p-2.5 text-xs shadow-md">
-      <p className="font-semibold text-slate-900">Week of {shortDate(w.date)}</p>
-      <p className="tabular-nums text-slate-700">Balance: {usd(w.balance)}</p>
-      {w.inflow > 0 && <p className="tabular-nums text-slate-600">Sales in: {usd(w.inflow)}</p>}
+    <div className="max-w-64 rounded-md border border-line bg-surface p-2.5 text-xs shadow-md">
+      <p className="font-semibold text-ink">Week of {shortDate(w.date)}</p>
+      <p className="tabular-nums text-copy">Balance: {usd(w.balance)}</p>
+      {w.inflow > 0 && <p className="tabular-nums text-muted">Sales in: {usd(w.inflow)}</p>}
       {w.events.map((e, i) => (
-        <p key={i} className="flex items-center gap-1 tabular-nums text-slate-600">
+        <p key={i} className="flex items-center gap-1 tabular-nums text-muted">
           <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: colorOf(e.orderId) }} />
           {nameOf(e.orderId)}, {e.label.toLowerCase()}: {usd(e.amount)}
         </p>
@@ -665,10 +665,10 @@ function WeekTip({ active, payload, nameOf, colorOf }: { active?: boolean; paylo
 function WeekTable({ pc, buffer, nameOf }: { pc: PortfolioCash; buffer: number; nameOf: (id: string) => string }) {
   return (
     <Details summary="Week-by-week table">
-      <div className="max-h-72 overflow-auto rounded border border-slate-200 bg-white">
+      <div className="max-h-72 overflow-auto rounded border border-line bg-surface">
         <table className="w-full text-xs tabular-nums">
           <caption className="sr-only">Combined cash by week</caption>
-          <thead className="sticky top-0 bg-slate-100 text-left text-slate-600">
+          <thead className="sticky top-0 bg-ink-soft text-left text-muted">
             <tr>
               <th className="px-2 py-1">Week of</th>
               <th className="px-2 py-1 text-right">In</th>
@@ -678,7 +678,7 @@ function WeekTable({ pc, buffer, nameOf }: { pc: PortfolioCash; buffer: number; 
           </thead>
           <tbody>
             {pc.weeks.map((w) => (
-              <tr key={w.week} className={`border-t border-slate-100 ${w.balance < buffer ? 'bg-amber-50' : ''}`} title={w.events.map((e) => `${nameOf(e.orderId)}: ${e.label}`).join('\n')}>
+              <tr key={w.week} className={`border-t border-line/60 ${w.balance < buffer ? 'bg-accent-soft' : ''}`} title={w.events.map((e) => `${nameOf(e.orderId)}: ${e.label}`).join('\n')}>
                 <td className="px-2 py-1">{shortDate(w.date)}</td>
                 <td className="px-2 py-1 text-right">{w.inflow ? usd(w.inflow) : ''}</td>
                 <td className="px-2 py-1 text-right">{w.outflow ? usd(w.outflow) : ''}</td>

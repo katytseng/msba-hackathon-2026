@@ -135,11 +135,11 @@ export default function HtsPicker({ code, description, onPick }: Props) {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         title={`${code} · ${description ?? rates.baseTariffs[code]?.description ?? ""}`}
-        className="flex w-72 items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1 text-left text-sm hover:border-slate-400"
+        className="flex w-72 items-center gap-2 rounded-md border border-line-strong bg-surface px-2 py-1 text-left text-sm hover:border-muted"
       >
-        <span className="font-mono text-xs text-slate-900">{code || 'Pick a code'}</span>
-        <span className="min-w-0 flex-1 truncate text-slate-600">{description ?? rates.baseTariffs[code]?.description ?? ''}</span>
-        <span aria-hidden className="text-slate-400">▾</span>
+        <span className="font-mono text-xs text-ink">{code || 'Pick a code'}</span>
+        <span className="min-w-0 flex-1 truncate text-muted">{description ?? rates.baseTariffs[code]?.description ?? ''}</span>
+        <span aria-hidden className="text-muted">▾</span>
       </button>
       {open &&
         createPortal(
@@ -149,9 +149,9 @@ export default function HtsPicker({ code, description, onPick }: Props) {
             aria-label="Find an HTS code"
             onKeyDown={onKey}
             style={{ top: pos.top, left: pos.left, width: PANEL_W, maxHeight: pos.maxH }}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-sm shadow-xl"
+            className="fixed z-50 flex flex-col overflow-hidden rounded-lg border border-line bg-surface text-sm shadow-xl"
           >
-            <div className="border-b border-slate-200 p-2">
+            <div className="border-b border-line p-2">
               <div className="mb-2 flex gap-1" role="tablist">
                 {(['search', 'browse'] as const).map((t) => (
                   <button
@@ -160,7 +160,7 @@ export default function HtsPicker({ code, description, onPick }: Props) {
                     role="tab"
                     aria-selected={view.tab === t}
                     onClick={() => setView({ tab: t })}
-                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${view.tab === t ? 'bg-blue-700 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${view.tab === t ? 'bg-ink text-white' : 'text-muted hover:bg-ink-soft'}`}
                   >
                     {t === 'search' ? 'Search' : 'Browse all sections'}
                   </button>
@@ -173,18 +173,18 @@ export default function HtsPicker({ code, description, onPick }: Props) {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Code (6109.10) or words (cotton t-shirt, sneakers, laptop)"
                   aria-label="Search HTS codes"
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-line-strong px-2 py-1.5 text-sm"
                 />
               )}
             </div>
             <div key={JSON.stringify(view)} className="min-h-0 flex-1 overflow-y-auto">
               {error && <p className="p-3 text-red-700">Couldn’t load the tariff schedule ({error}). Close and try again.</p>}
-              {!data && !error && <p className="p-3 text-slate-500">Loading the tariff schedule…</p>}
+              {!data && !error && <p className="p-3 text-muted">Loading the tariff schedule…</p>}
               {data && view.tab === 'search' && (
                 <>
-                  {!query.trim() && <p className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-slate-500">Recent and common codes</p>}
+                  {!query.trim() && <p className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-muted">Recent and common codes</p>}
                   {query.trim() && list.length === 0 && (
-                    <p className="p-3 text-slate-500">
+                    <p className="p-3 text-muted">
                       No match. Try fewer or simpler words (the schedule says “trousers”, not “jeans”), or use Browse.
                     </p>
                   )}
@@ -211,7 +211,7 @@ function RateBadge({ e }: { e: HtsEntry }) {
   return (
     <span
       title={`Rate is “${e.general}”. Only percent and Free rates can be estimated, so this line can’t be picked.`}
-      className="max-w-40 shrink-0 truncate rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800"
+      className="max-w-40 shrink-0 truncate rounded bg-accent-soft px-1.5 py-0.5 text-xs font-medium text-accent-ink"
     >
       {e.general} · not supported
     </span>
@@ -229,12 +229,12 @@ function ResultRow({ data, e, idx, active, onHover, onPick }: { data: HtsData; e
       data-idx={idx}
       onMouseEnter={onHover}
       onClick={onPick}
-      className={`flex cursor-pointer items-start gap-3 px-3 py-2 ${active ? 'bg-blue-50' : ''} ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+      className={`flex cursor-pointer items-start gap-3 px-3 py-2 ${active ? 'bg-ink-soft' : ''} ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
     >
-      <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-slate-900">{e.code}</span>
+      <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-ink">{e.code}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-slate-900">{e.desc.replace(/:$/, '')}</span>
-        {crumbs.length > 0 && <span className="block truncate text-xs text-slate-500">{crumbs.map((c) => c.desc.replace(/:$/, '')).join(' › ')}</span>}
+        <span className="block text-ink">{e.desc.replace(/:$/, '')}</span>
+        {crumbs.length > 0 && <span className="block truncate text-xs text-muted">{crumbs.map((c) => c.desc.replace(/:$/, '')).join(' › ')}</span>}
       </span>
       <RateBadge e={e} />
     </li>
@@ -271,10 +271,10 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
             type="button"
             disabled={e.rate === null}
             onClick={() => pick(e)}
-            className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-transparent"
+            className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-transparent"
           >
-            <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-slate-900">{e.code}</span>
-            <span className="min-w-0 flex-1 text-slate-900">{e.desc.replace(/:$/, '')}</span>
+            <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-ink">{e.code}</span>
+            <span className="min-w-0 flex-1 text-ink">{e.desc.replace(/:$/, '')}</span>
             {e.rated && <RateBadge e={e} />}
           </button>
         </li>
@@ -284,28 +284,28 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
 
   return (
     <div>
-      <nav aria-label="Browse path" className="flex flex-wrap items-center gap-1 border-b border-slate-100 px-3 py-2 text-xs">
+      <nav aria-label="Browse path" className="flex flex-wrap items-center gap-1 border-b border-line/60 px-3 py-2 text-xs">
         {crumbs.map((c, k) => (
           <span key={k} className="flex items-center gap-1">
-            {k > 0 && <span className="text-slate-400">›</span>}
+            {k > 0 && <span className="text-muted">›</span>}
             {k === crumbs.length - 1 ? (
-              <span className="font-medium text-slate-900">{c.label}</span>
+              <span className="font-medium text-ink">{c.label}</span>
             ) : (
-              <button type="button" className="text-blue-700 hover:underline" onClick={() => setView(c.to)}>
+              <button type="button" className="text-ink hover:underline" onClick={() => setView(c.to)}>
                 {c.label}
               </button>
             )}
           </span>
         ))}
       </nav>
-      {view.chapter && <p className="px-3 pt-2 text-xs text-slate-500">{CHAPTERS[Number(view.chapter)]}</p>}
+      {view.chapter && <p className="px-3 pt-2 text-xs text-muted">{CHAPTERS[Number(view.chapter)]}</p>}
       {node?.rated && (
-        <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-3 py-2">
-          <span className="min-w-0 flex-1 text-slate-700">
+        <div className="flex items-center gap-3 border-b border-line/60 bg-page px-3 py-2">
+          <span className="min-w-0 flex-1 text-copy">
             Use <span className="font-mono text-xs">{node.code}</span> itself
           </span>
           <RateBadge e={node} />
-          <button type="button" disabled={node.rate === null} onClick={() => pick(node)} className="rounded-md bg-blue-700 px-2 py-1 text-xs font-medium text-white disabled:opacity-50">
+          <button type="button" disabled={node.rate === null} onClick={() => pick(node)} className="rounded-md bg-ink px-2 py-1 text-xs font-medium text-white disabled:opacity-50">
             Use this code
           </button>
         </div>
@@ -318,11 +318,11 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
 function NavRow({ onClick, left, text, right }: { onClick: () => void; left: string; text: string; right?: ReactNode }) {
   return (
     <li>
-      <button type="button" onClick={onClick} className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-blue-50">
-        <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-slate-500">{left}</span>
-        <span className="min-w-0 flex-1 text-slate-900">{text}</span>
-        {right && <span className="shrink-0 text-xs text-slate-500">{right}</span>}
-        <span aria-hidden className="text-slate-400">›</span>
+      <button type="button" onClick={onClick} className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-ink-soft">
+        <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-muted">{left}</span>
+        <span className="min-w-0 flex-1 text-ink">{text}</span>
+        {right && <span className="shrink-0 text-xs text-muted">{right}</span>}
+        <span aria-hidden className="text-muted">›</span>
       </button>
     </li>
   )
@@ -330,7 +330,7 @@ function NavRow({ onClick, left, text, right }: { onClick: () => void; left: str
 
 function Footer({ data }: { data: HtsData | null }) {
   return (
-    <p className="border-t border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
+    <p className="border-t border-line bg-page px-3 py-1.5 text-xs text-muted">
       {data ? `USITC HTS ${data.title}, checked ${new Date(data.fetchedAt).toLocaleDateString()}. ` : ''}
       Only percent and Free rates can be estimated. Per-kg, per-unit and mixed rates are shown but can’t be picked.
     </p>
