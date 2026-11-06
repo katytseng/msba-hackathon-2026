@@ -1,0 +1,118 @@
+import type { Business, Product } from '../engine'
+import { pct } from '../format'
+import { rates, useApp } from '../state'
+import { Button, Card, NextLink, NumberField, PageHeader } from '../components/ui'
+
+const htsCodes = Object.entries(rates.baseTariffs)
+
+export default function BusinessScreen() {
+  const { inputs, setInputs } = useApp()
+  const { business, products } = inputs
+
+  const setBiz = (patch: Partial<Business>) => setInputs((p) => ({ ...p, business: { ...p.business, ...patch } }))
+  const setProduct = (id: string, patch: Partial<Product>) =>
+    setInputs((p) => ({ ...p, products: p.products.map((x) => (x.id === id ? { ...x, ...patch } : x)) }))
+  const addProduct = () =>
+    setInputs((p) => ({
+      ...p,
+      products: [
+        ...p.products,
+        { id: `p${Date.now()}`, name: 'New product', htsCode: htsCodes[0][0], qty: 100, sellPrice: 0, salesPerWeek: 10 },
+      ],
+    }))
+  const removeProduct = (id: string) => setInputs((p) => ({ ...p, products: p.products.filter((x) => x.id !== id) }))
+
+  return (
+    <div>
+      <PageHeader step={1} title="Your business" subtitle="Cash today, the cushion you want to keep, and what you sell." />
+
+      <Card title="Cash" className="mb-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <NumberField label="Cash on hand" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
+          <NumberField label="Safety buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
+          <NumberField label="Loan APR" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Order date</span>
+            <input
+              type="date"
+              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              value={business.orderDate}
+              onChange={(e) => e.target.value && setBiz({ orderDate: e.target.value })}
+            />
+          </label>
+        </div>
+        <p className="mt-3 text-xs text-slate-500">The safety buffer is the lowest balance you are comfortable with. We flag any week your cash falls below it.</p>
+      </Card>
+
+      <Card title="Products in this order">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="py-2 pr-2">Product</th>
+                <th className="py-2 pr-2">HTS code</th>
+                <th className="py-2 pr-2 text-right">Base tariff</th>
+                <th className="w-24 py-2 pr-2 text-right">Quantity</th>
+                <th className="w-28 py-2 pr-2 text-right">Sell price</th>
+                <th className="w-28 py-2 pr-2 text-right">Sales / week</th>
+                <th className="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p.id} className="border-b border-slate-100">
+                  <td className="py-2 pr-2">
+                    <input
+                      className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+                      value={p.name}
+                      onChange={(e) => setProduct(p.id, { name: e.target.value })}
+                    />
+                  </td>
+                  <td className="py-2 pr-2">
+                    <select
+                      className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                      value={p.htsCode}
+                      onChange={(e) => setProduct(p.id, { htsCode: e.target.value })}
+                    >
+                      {htsCodes.map(([code, r]) => (
+                        <option key={code} value={code}>
+                          {code} · {r.description}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-slate-600">{pct(rates.baseTariffs[p.htsCode]?.rate ?? 0)}</td>
+                  <td className="py-2 pr-2">
+                    <NumberField compact label="Quantity" value={p.qty} onChange={(v) => setProduct(p.id, { qty: Math.max(0, Math.round(v)) })} />
+                  </td>
+                  <td className="py-2 pr-2">
+                    <NumberField compact label="Sell price" prefix="$" value={p.sellPrice} onChange={(v) => setProduct(p.id, { sellPrice: v })} />
+                  </td>
+                  <td className="py-2 pr-2">
+                    <NumberField compact label="Sales per week" value={p.salesPerWeek} onChange={(v) => setProduct(p.id, { salesPerWeek: Math.max(0, v) })} />
+                  </td>
+                  <td className="py-2 text-right">
+                    <Button variant="danger" onClick={() => removeProduct(p.id)}>Remove</Button>
+                  </td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-slate-500">
+                    No products yet. Click <b>Load sample</b> at the top, or add one.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-3">
+          <Button variant="secondary" onClick={addProduct}>+ Add product</Button>
+        </div>
+        <p className="mt-3 text-xs text-slate-500">Base tariffs come from the USITC Harmonized Tariff Schedule, stored in rates.json.</p>
+      </Card>
+
+      <NextLink to="/suppliers">Next: supplier quotes</NextLink>
+    </div>
+  )
+}
