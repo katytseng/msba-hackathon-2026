@@ -15,7 +15,7 @@ import { addDays, type CashWeek } from '../engine'
 import { niceDate, shortDate, usd } from '../format'
 import { useApp } from '../state'
 import { thisOrderSentences } from '../summaries'
-import { Callout, Card, Info, NeedsData, NextLink, PageHeader, Segmented } from '../components/ui'
+import { Callout, Card, Info, NeedsData, NextLink, PageHeader, Segmented, usePrefersReducedMotion } from '../components/ui'
 import type { GlossaryKey } from '../glossary'
 
 const EVENT_TERMS: Record<string, GlossaryKey> = {
@@ -80,6 +80,7 @@ export default function CashScreen() {
   const [period, setPeriod] = useState<'order' | 'all'>('order')
   const [yScale, setYScale] = useState<'zero' | 'fit'>('zero')
   const [xUnit, setXUnit] = useState<'weeks' | 'dates'>('weeks')
+  const reducedMotion = usePrefersReducedMotion()
 
   // Order period: until cash is back above the starting balance, plus two weeks.
   const allWeeks = cash?.weeks ?? []
@@ -218,7 +219,10 @@ export default function CashScreen() {
                       stroke="#cbd5e1"
                       label={{ value: 'Sales start', position: 'top', fontSize: 11, fill: '#64748b' }}
                     />
-                    <Line type="linear" dataKey="balance" stroke={LINE} strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
+                    <Line type="linear" dataKey="balance" stroke={LINE} strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={!reducedMotion}
+                      animationDuration={250}
+                      animationEasing="ease-out"
+                    />
                     <ReferenceDot
                       x={cash.lowestWeek}
                       y={cash.lowest}

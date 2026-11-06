@@ -114,6 +114,37 @@ export function Info({ term }: { term: GlossaryKey }) {
   )
 }
 
+/**
+ * Smoothly expands or collapses its content (height + fade, ~200 ms).
+ * Collapsed content stays in the DOM but is inert, so it can't be focused or read out.
+ */
+export function Collapse({ open, children, id, className = '' }: { open: boolean; children: ReactNode; id?: string; className?: string }) {
+  return (
+    <div
+      id={id}
+      inert={!open}
+      className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
+        open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+      } ${className}`}
+    >
+      <div className="min-h-0 overflow-hidden">{children}</div>
+    </div>
+  )
+}
+
+/** True when the user asked the OS for less motion. */
+export function usePrefersReducedMotion() {
+  const query = '(prefers-reduced-motion: reduce)'
+  const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
+
 /** Small "Details" / "Hide details" link button for revealing a breakdown. */
 export function DetailsToggle({ open, onToggle, label = 'details', controls }: { open: boolean; onToggle: () => void; label?: string; controls?: string }) {
   return (
