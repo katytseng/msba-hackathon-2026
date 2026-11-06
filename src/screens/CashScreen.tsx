@@ -15,7 +15,15 @@ import { addDays, type CashWeek } from '../engine'
 import { niceDate, shortDate, usd } from '../format'
 import { useApp } from '../state'
 import { thisOrderSentences } from '../summaries'
-import { Callout, Card, NeedsData, NextLink, PageHeader } from '../components/ui'
+import { Callout, Card, Info, NeedsData, NextLink, PageHeader } from '../components/ui'
+import type { GlossaryKey } from '../glossary'
+
+const EVENT_TERMS: Record<string, GlossaryKey> = {
+  'Deposit to supplier': 'depositPayment',
+  'Balance to supplier': 'balancePayment',
+  'Freight and insurance': 'freightInsurance',
+  'Duty and customs fees': 'dutyPayment',
+}
 
 const LINE = '#1d4ed8' // blue-700
 const BUFFER = '#64748b' // slate-500
@@ -69,15 +77,17 @@ export default function CashScreen() {
             </div>
 
             <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
-              <Stat label="Lowest balance" value={usd(cash.lowest)} sub={`Week ${cash.lowestWeek}`} />
+              <Stat label="Lowest balance" info="lowestBalance" value={usd(cash.lowest)} sub={`Week ${cash.lowestWeek}`} />
               <Stat
                 label={cash.shortfall > 0 ? 'Below buffer by' : 'Headroom'}
+                info={cash.shortfall > 0 ? 'belowBuffer' : 'headroom'}
                 value={usd(cash.shortfall > 0 ? cash.shortfall : cash.headroom)}
                 sub={cash.shortfall > 0 ? `for ${cash.weeksBelowBuffer} weeks` : 'above buffer'}
               />
-              <Stat label="Goods arrive" value={`Day ${cash.arrivalDay}`} sub={niceDate(addDays(inputs.business.orderDate, cash.arrivalDay))} />
+              <Stat label="Goods arrive" info="goodsArrive" value={`Day ${cash.arrivalDay}`} sub={niceDate(addDays(inputs.business.orderDate, cash.arrivalDay))} />
               <Stat
                 label={cash.shortfall > 0 ? 'Interest to bridge' : 'Extra units affordable'}
+                info={cash.shortfall > 0 ? 'interest' : 'extraUnits'}
                 value={cash.shortfall > 0 ? usd(cash.interest) : cash.extraUnits.toLocaleString()}
                 sub={cash.shortfall > 0 ? `at ${(inputs.business.apr * 100).toFixed(0)}% APR` : 'without borrowing'}
               />
@@ -139,6 +149,7 @@ export default function CashScreen() {
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                 <span>
                   {cash.shortfall > 0 ? 'Shaded weeks are below your safety buffer. ' : ''}
+                  Sales start the first full week after arrival<Info term="salesStart" />. 
                   Balances are at the end of each week. Hover a week for details.
                 </span>
                 {(zoomed || showAll) && (
@@ -164,7 +175,10 @@ export default function CashScreen() {
                       <td className="py-2">
                         Day {e.day} <span className="text-slate-500">({niceDate(addDays(inputs.business.orderDate, e.day))}, week {Math.floor(e.day / 7)})</span>
                       </td>
-                      <td className="py-2">{e.label}</td>
+                      <td className="py-2">
+                        {e.label}
+                        {EVENT_TERMS[e.label] && <Info term={EVENT_TERMS[e.label]} />}
+                      </td>
                       <td className="py-2 text-right">{usd(-e.amount, true)}</td>
                     </tr>
                   ))}
@@ -179,10 +193,13 @@ export default function CashScreen() {
   )
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Stat({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: GlossaryKey }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="flex items-center text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+        {info && <Info term={info} />}
+      </p>
       <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
       {sub && <p className="text-xs text-slate-500">{sub}</p>}
     </div>

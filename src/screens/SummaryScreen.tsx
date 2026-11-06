@@ -1,7 +1,8 @@
 import { niceDate, pct, usd } from '../format'
 import { rates, useApp } from '../state'
 import { DISCLAIMER, nextOrderSentences, supplierSentence, thisOrderSentences } from '../summaries'
-import { Button, Callout, Card, NeedsData, PageHeader } from '../components/ui'
+import { Button, Callout, Card, Info, NeedsData, PageHeader } from '../components/ui'
+import type { GlossaryKey } from '../glossary'
 
 const ASSUMPTIONS = [
   'Prices are FOB (you pay freight from the port of origin).',
@@ -49,14 +50,14 @@ export default function SummaryScreen() {
 
             <Card title="Order at a glance" className="mb-5">
               <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm md:grid-cols-4">
-                <Item label="Supplier" value={`${chosen.supplierName} (${chosen.country})`} />
-                <Item label="Units" value={chosen.units.toLocaleString()} />
-                <Item label="Landed total" value={usd(chosen.total, true)} />
-                <Item label="Per unit (average)" value={usd(chosen.avgUnit, true)} />
-                <Item label="Product cost" value={usd(chosen.customsValue, true)} />
-                <Item label="Tariffs" value={usd(chosen.baseDuty + chosen.extraDuty, true)} />
-                <Item label="Freight + insurance" value={usd(chosen.freight + chosen.insurance, true)} />
-                <Item label="Customs fees + broker" value={usd(chosen.mpf + chosen.hmf + chosen.broker, true)} />
+                <Item label="Supplier" info="supplierName" value={`${chosen.supplierName} (${chosen.country})`} />
+                <Item label="Units" info="units" value={chosen.units.toLocaleString()} />
+                <Item label="Landed total" info="landedTotal" value={usd(chosen.total, true)} />
+                <Item label="Per unit (average)" info="avgUnit" value={usd(chosen.avgUnit, true)} />
+                <Item label="Product cost" info="productCost" value={usd(chosen.customsValue, true)} />
+                <Item label="Tariffs" info="totalTariff" value={usd(chosen.baseDuty + chosen.extraDuty, true)} />
+                <Item label="Freight + insurance" info="freightInsurance" value={usd(chosen.freight + chosen.insurance, true)} />
+                <Item label="Customs fees + broker" info="customsFees" value={usd(chosen.mpf + chosen.hmf + chosen.broker, true)} />
               </dl>
             </Card>
 
@@ -111,10 +112,13 @@ export default function SummaryScreen() {
   )
 }
 
-function Item({ label, value }: { label: string; value: string }) {
+function Item({ label, value, info }: { label: string; value: string; info?: GlossaryKey }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dt className="flex items-center text-xs uppercase tracking-wide text-slate-500">
+        {label}
+        {info && <Info term={info} />}
+      </dt>
       <dd className="font-semibold tabular-nums text-slate-900">{value}</dd>
     </div>
   )
