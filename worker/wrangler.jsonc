@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "landed-cost-explain",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Own namespace (landed-cost-explain-KV), separate from the map chat so budgets and caches do not mix.
+  "kv_namespaces": [{ "binding": "KV", "id": "9ebcfe8f5aeb497fbb19c2da881436bd" }],
+
+  "vars": {
+    // Who may call this Worker. Add your GitHub Pages origin (no path, no trailing slash).
+    "ALLOWED_ORIGINS": "http://localhost:5173,https://katytseng.github.io",
+    "MODEL": "claude-haiku-5-5",
+    "EFFORT": "low",
+    "MAX_OUTPUT_TOKENS": "2000",
+    "UPSTREAM_TIMEOUT_MS": "4500",
+    // Spending cap: stop calling Claude for the rest of the UTC day once this much has been spent.
+    "DAILY_BUDGET_USD": "1",
+    "IP_PER_HOUR": "20",
+    "CACHE_TTL_S": "604800"
+  }
+  // The API key is a secret, not a var: npx wrangler secret put ANTHROPIC_API_KEY
+}
