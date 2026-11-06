@@ -15,7 +15,7 @@ import { addDays, type CashWeek } from '../engine'
 import { niceDate, shortDate, usd } from '../format'
 import { useApp } from '../state'
 import { thisOrderSentences } from '../summaries'
-import { Callout, Card, Info, NeedsData, NextLink, PageHeader, Segmented, usePrefersReducedMotion } from '../components/ui'
+import { Callout, Card, Info, NeedsData, PageHeader, Segmented, usePrefersReducedMotion } from '../components/ui'
 import type { GlossaryKey } from '../glossary'
 
 const EVENT_TERMS: Record<string, GlossaryKey> = {
