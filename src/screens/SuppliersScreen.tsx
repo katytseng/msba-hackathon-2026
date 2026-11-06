@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Supplier } from '../engine'
 import { pct, usd } from '../format'
 import { rates, useApp } from '../state'
-import { Button, Card, DetailsToggle, Info, NextLink, NumberField, PageHeader } from '../components/ui'
+import { Button, Card, DetailsToggle, Info, NumberField, PageHeader } from '../components/ui'
 
 const countries = Object.keys(rates.extraTariffs)
 
@@ -161,8 +161,6 @@ export default function SuppliersScreen() {
           + Add supplier
         </button>
       </div>
-
-      <NextLink to="/compare">Next: compare landed cost</NextLink>
     </div>
   )
 }

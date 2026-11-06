@@ -15,7 +15,7 @@ import { addDays, type CashWeek } from '../engine'
 import { niceDate, shortDate, usd } from '../format'
 import { useApp } from '../state'
 import { thisOrderSentences } from '../summaries'
-import { Callout, Card, Info, NeedsData, NextLink, PageHeader } from '../components/ui'
+import { Callout, Card, Info, NeedsData, PageHeader } from '../components/ui'
 import type { GlossaryKey } from '../glossary'
 
 const EVENT_TERMS: Record<string, GlossaryKey> = {
@@ -187,7 +187,6 @@ export default function CashScreen() {
             </Card>
           </>
         )}
-        <NextLink to="/tariffs">Next: what if tariffs change?</NextLink>
       </NeedsData>
     </div>
   )
