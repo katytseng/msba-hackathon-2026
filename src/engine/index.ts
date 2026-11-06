@@ -1,15 +1,21 @@
 // The one calculation engine. Every screen uses these functions.
-// Formulas follow CONTEXT.md exactly. No rounding happens here; screens round for display.
+// Formulas follow CONTEXT.md exactly. No rounding happens in the calculations.
+// costBreakdown() is the one display helper that rounds, so its lines add up to the cent.
 import type {
   BreakEven,
   CashEvent,
   CashResult,
   CashWeek,
+  CostBreakdown,
+  CostLineKey,
   Inputs,
   LandedResult,
+  OrderMargin,
+  ProductSales,
   Rates,
   RankedResult,
   Supplier,
+  TariffScenario,
 } from './types'
 
 export * from './types'
@@ -211,4 +217,121 @@ export function cashTimeline(inputs: Inputs, supplier: Supplier, rates: Rates, l
     headroom,
     extraUnits,
   }
+}
+
+/**
+ * Gross margin on the whole order, assuming full sell-through: every unit of a product
+ * with weekly sales is sold at its sell price, however many weeks that takes.
+ * This does not stop at the cash timeline's last week.
+ */
+export function orderMargin(inputs: Inputs, landed: LandedResult): OrderMargin {
+  let revenue = 0
+  let weeksToSellOut = 0
+  let unsoldUnits = 0
+  const perProduct: ProductSales[] = []
+  for (const p of inputs.products) {
+    const sells = p.salesPerWeek > 0
+    const productRevenue = sells ? p.qty * p.sellPrice : 0
+    const weeks = sells ? Math.ceil(p.qty / p.salesPerWeek) : null
+    revenue += productRevenue
+    if (weeks !== null) weeksToSellOut = Math.max(weeksToSellOut, weeks)
+    else unsoldUnits += p.qty
+    perProduct.push({
+      productId: p.id,
+      name: p.name,
+      qty: p.qty,
+      sellPrice: p.sellPrice,
+      salesPerWeek: p.salesPerWeek,
+      revenue: productRevenue,
+      weeksToSellOut: weeks,
+    })
+  }
+  const margin = revenue - landed.total
+  return {
+    revenue,
+    landed: landed.total,
+    margin,
+    marginPct: revenue > 0 ? margin / revenue : 0,
+    weeksToSellOut,
+    unsoldUnits,
+    perProduct,
+  }
+}
+
+/**
+ * The landed total split into its parts, rounded to cents so the lines add up exactly to
+ * the rounded total. Any leftover cent goes to the lines that lost the most in rounding.
+ */
+export function costBreakdown(lc: LandedResult): CostBreakdown {
+  const raw: [CostLineKey, number][] = [
+    ['product', lc.customsValue],
+    ['baseDuty', lc.baseDuty],
+    ['extraDuty', lc.extraDuty],
+    ['mpf', lc.mpf],
+    ['hmf', lc.hmf],
+    ['insurance', lc.insurance],
+    ['freight', lc.freight],
+    ['broker', lc.broker],
+  ]
+  const totalCents = Math.round(lc.total * 100)
+  const cents = raw.map(([, x]) => Math.floor(x * 100 + 1e-7))
+  let left = totalCents - cents.reduce((s, c) => s + c, 0)
+  const order = raw.map(([, x], i) => ({ i, rem: x * 100 - cents[i] })).sort((a, b) => b.rem - a.rem)
+  for (let k = 0; left > 0 && k < order.length; k++, left--) cents[order[k].i] += 1
+  return {
+    lines: raw.map(([key], i) => ({ key, amount: cents[i] / 100 })),
+    total: totalCents / 100,
+  }
+}
+
+/** Extra-tariff changes that set every supplier in `country` to `extraRate`. */
+function countryDeltas(inputs: Inputs, rates: Rates, country: string, extraRate: number): Record<string, number> {
+  const delta = extraRate - extraRateFor(rates, country)
+  return Object.fromEntries(inputs.suppliers.filter((s) => s.country === country).map((s) => [s.id, delta]))
+}
+
+/**
+ * What a new extra tariff on one country means for the next order: who is cheapest,
+ * by how much, and the margin and cash picture for that cheapest supplier.
+ * Returns null when there are no suppliers.
+ */
+export function tariffScenario(inputs: Inputs, rates: Rates, country: string, extraRate: number): TariffScenario | null {
+  const today = compareSuppliers(inputs, rates)
+  const ranked = compareSuppliers(inputs, rates, countryDeltas(inputs, rates, country, extraRate))
+  if (ranked.length === 0) return null
+  const [cheapest, runnerUp = null] = ranked
+  const supplier = inputs.suppliers.find((s) => s.id === cheapest.supplierId)!
+  const todayRate = extraRateFor(rates, country)
+  const staying = ranked.find((r) => r.supplierId === today[0].supplierId)!
+  return {
+    country,
+    todayRate,
+    extraRate,
+    delta: extraRate - todayRate,
+    ranked,
+    cheapest,
+    runnerUp,
+    gapToRunnerUp: runnerUp ? runnerUp.total - cheapest.total : 0,
+    todayCheapest: today[0],
+    staying,
+    switched: staying.supplierId !== cheapest.supplierId,
+    savingsVsStaying: staying.total - cheapest.total,
+    margin: orderMargin(inputs, cheapest),
+    cash: cashTimeline(inputs, supplier, rates, cheapest),
+  }
+}
+
+/**
+ * The extra-tariff rate on `country` where the cheapest supplier changes hands between
+ * that country and everyone else. Below it a supplier from `country` is cheapest; above it,
+ * a supplier from elsewhere is. Null when there is no supplier on both sides to compare.
+ */
+export function countryFlipRate(inputs: Inputs, rates: Rates, country: string): number | null {
+  const ranked = compareSuppliers(inputs, rates)
+  const inside = ranked.filter((r) => r.country === country && r.customsValue > 0)
+  const outside = ranked.filter((r) => r.country !== country)
+  if (inside.length === 0 || outside.length === 0) return null
+  const bestOther = outside[0].total
+  const today = extraRateFor(rates, country)
+  return Math.max(...inside.map((r) => today + (bestOther - r.total) / r.customsValue))
 }
