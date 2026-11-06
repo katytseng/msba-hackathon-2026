@@ -1,0 +1,23 @@
+{
+  "_note": "Task B1: confirm every value, source and date against the spreadsheet's Sources tab. Task B2: confirm extra tariffs against HTS Chapter 99 (9903 lines) and set status to 'matches' or 'differs'.",
+  "lastReviewed": "2026-11-05",
+  "baseTariffs": {
+    "6109.10.00": { "rate": 0.165, "description": "Cotton knit T-shirt", "source": "USITC Harmonized Tariff Schedule", "url": "https://hts.usitc.gov/", "date": "2026-11-05" },
+    "6205.20.20": { "rate": 0.197, "description": "Cotton woven shirt", "source": "USITC Harmonized Tariff Schedule", "url": "https://hts.usitc.gov/", "date": "2026-11-05" },
+    "6203.42.45": { "rate": 0.166, "description": "Cotton trousers", "source": "USITC Harmonized Tariff Schedule", "url": "https://hts.usitc.gov/", "date": "2026-11-05" },
+    "6201.40": { "rate": 0.277, "description": "Synthetic jacket, not water resistant (Other)", "source": "USITC Harmonized Tariff Schedule", "url": "https://hts.usitc.gov/", "date": "2026-11-05" },
+    "6404.11.90": { "rate": 0.20, "description": "Textile sneaker over $12/pair", "source": "USITC Harmonized Tariff Schedule", "url": "https://hts.usitc.gov/", "date": "2026-11-05" }
+  },
+  "extraTariffs": {
+    "China": { "rate": 0.20, "note": "7.5% List 4A + 12.5% July 2026 Section 301", "source": "Trade advisory sites (to confirm in HTS Chapter 99, task B2)", "url": "https://hts.usitc.gov/", "date": "2026-11-05", "status": "to verify" },
+    "Vietnam": { "rate": 0.125, "note": "July 2026 Section 301", "source": "Trade advisory sites (to confirm in HTS Chapter 99, task B2)", "url": "https://hts.usitc.gov/", "date": "2026-11-05", "status": "to verify" },
+    "India": { "rate": 0.10, "note": "July 2026 Section 301, lower tier", "source": "Trade advisory sites and Government of India announcement (to confirm, task B2)", "url": "https://hts.usitc.gov/", "date": "2026-11-05", "status": "to verify" }
+  },
+  "fees": {
+    "mpf": { "rate": 0.003464, "min": 34.58, "max": 670.86, "label": "Merchandise processing fee (FY2027)", "source": "U.S. Customs and Border Protection user fees", "url": "https://www.cbp.gov/", "date": "2026-11-05" },
+    "hmf": { "rate": 0.00125, "label": "Harbor maintenance fee (ocean only)", "source": "U.S. Customs and Border Protection", "url": "https://www.cbp.gov/", "date": "2026-11-05" },
+    "insurance": { "rate": 0.005, "label": "Cargo insurance", "source": "Assumption (typical rate)", "url": "", "date": "2026-11-05" },
+    "broker": { "amount": 250, "label": "Customs broker fee", "source": "Assumption (typical flat fee)", "url": "", "date": "2026-11-05" },
+    "dutyPaymentDays": { "days": 14, "label": "Duty and fees paid after arrival", "source": "Assumption (typical broker terms)", "url": "", "date": "2026-11-05" }
+  }
+}
