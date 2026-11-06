@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { pct, usd } from '../format'
 import { useApp } from '../state'
 import { supplierSentence } from '../summaries'
-import { Button, Callout, Card, NeedsData, NextLink, PageHeader } from '../components/ui'
+import { Callout, Card, DetailsToggle, Info, NeedsData, NextLink, PageHeader } from '../components/ui'
 
 export default function CompareScreen() {
-  const { ranked, chosen, setSelectedId } = useApp()
+  const { inputs, ranked, chosen, setSelectedId } = useApp()
+  const [details, setDetails] = useState(false)
+  const toggleDetails = <DetailsToggle open={details} onToggle={() => setDetails((v) => !v)} label="calculation details" />
 
   return (
     <div>
@@ -17,27 +20,50 @@ export default function CompareScreen() {
         </div>
 
         <Card title="Suppliers, cheapest first" className="mb-5">
+          <div className="-mt-1 mb-2 flex justify-end">{toggleDetails}</div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-sm tabular-nums">
+            <table className="w-full whitespace-nowrap text-sm tabular-nums">
               <thead>
                 <tr className="border-b border-slate-200 text-right text-xs uppercase tracking-wide text-slate-500">
+                  <th className="py-2 pr-4 text-center">Select</th>
                   <th className="py-2 pr-3 text-left">Supplier</th>
-                  <th className="py-2 pr-3">Product cost</th>
-                  <th className="py-2 pr-3">Base tariff</th>
-                  <th className="py-2 pr-3">Extra tariff</th>
-                  <th className="py-2 pr-3">Freight + insurance</th>
-                  <th className="py-2 pr-3">Customs fees</th>
-                  <th className="py-2 pr-3">Landed total</th>
-                  <th className="py-2 pr-3">Per unit</th>
-                  <th className="py-2" />
+                  <th className="py-2 pr-3">Product cost<Info term="productCost" /></th>
+                  <th className="py-2 pr-3">Tariffs<Info term="totalTariff" /></th>
+                  <th className="py-2 pr-3">Freight + insurance<Info term="freightInsurance" /></th>
+                  <th className="py-2 pr-3">Customs fees<Info term="customsFees" /></th>
+                  <th className="py-2 pr-3">Time to arrive<Info term="daysToArrive" /></th>
+                  <th className="py-2 pr-3">Landed total<Info term="landedTotal" /></th>
+                  <th className="py-2">Per unit<Info term="avgUnit" /></th>
                 </tr>
               </thead>
               <tbody>
                 {ranked.map((r) => {
                   const isChosen = chosen?.supplierId === r.supplierId
                   const isCheapest = r.rank === 1
+                  const sup = inputs.suppliers.find((s) => s.id === r.supplierId)
+                  const tariff = r.baseDuty + r.extraDuty
                   return (
                     <tr key={r.supplierId} className={`border-b border-slate-100 text-right ${isCheapest ? 'bg-emerald-50' : ''}`}>
+                      <td className="py-3 pr-4 text-center">
+                        <label className="inline-flex cursor-pointer">
+                          <input
+                            type="radio"
+                            name="chosen-supplier"
+                            className="peer sr-only"
+                            checked={isChosen}
+                            onChange={() => setSelectedId(r.supplierId)}
+                            aria-label={`Select ${r.supplierName} (${r.country})`}
+                          />
+                          <span
+                            aria-hidden
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-sm font-bold text-white transition peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2 ${
+                              isChosen ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300 bg-white hover:border-emerald-500'
+                            }`}
+                          >
+                            {isChosen && '✓'}
+                          </span>
+                        </label>
+                      </td>
                       <td className="py-3 pr-3 text-left">
                         <div className="font-semibold text-slate-900">
                           {r.rank}. {r.supplierName} <span className="font-normal text-slate-500">({r.country})</span>
@@ -49,44 +75,57 @@ export default function CompareScreen() {
                         )}
                       </td>
                       <td className="py-3 pr-3">{usd(r.customsValue)}</td>
-                      <td className="py-3 pr-3">{usd(r.baseDuty)}</td>
                       <td className="py-3 pr-3">
-                        {usd(r.extraDuty)}
-                        <div className="text-xs text-slate-500">{pct(r.extraRate)}</div>
+                        {usd(tariff)}
+                        <div className="text-xs text-slate-500">{r.customsValue > 0 ? `${pct(tariff / r.customsValue)} of value` : ''}</div>
+                        {details && (
+                          <div className="mt-1 space-y-0.5 border-t border-slate-200 pt-1 text-xs text-slate-600">
+                            <div>Base {usd(r.baseDuty)}</div>
+                            <div>
+                              + Extra {usd(r.extraDuty)} <span className="text-slate-400">({pct(r.extraRate)})</span>
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 pr-3">{usd(r.freight + r.insurance)}</td>
                       <td className="py-3 pr-3">{usd(r.mpf + r.hmf + r.broker)}</td>
-                      <td className="py-3 pr-3 text-base font-bold text-slate-900">{usd(r.total, true)}</td>
-                      <td className="py-3 pr-3">{usd(r.avgUnit, true)}</td>
-                      <td className="py-3 text-right">
-                        {isChosen ? (
-                          <span className="inline-block rounded-md bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-800">Selected</span>
-                        ) : (
-                          <Button variant="secondary" onClick={() => setSelectedId(r.supplierId)}>Select</Button>
+                      <td className="py-3 pr-3">
+                        {sup && (
+                          <>
+                            {sup.leadTimeDays + sup.transitDays} days
+                            {details && (
+                              <div className="mt-1 border-t border-slate-200 pt-1 text-xs text-slate-600">
+                                {sup.leadTimeDays} lead + {sup.transitDays} transit
+                              </div>
+                            )}
+                          </>
                         )}
                       </td>
+                      <td className="py-3 pr-3 font-semibold text-slate-900">{usd(r.total, true)}</td>
+                      <td className="py-3">{usd(r.avgUnit, true)}</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-slate-500">Customs fees = merchandise processing fee + harbor maintenance fee + broker. Tariffs are charged on product value only (FOB).</p>
+          <p className="mt-3 text-xs text-slate-500">Customs fees = merchandise processing fee + harbor maintenance fee + broker. Tariffs are charged on product value only (FOB). Time to arrive = supplier lead time + transit.</p>
         </Card>
 
         {chosen && (
           <Card title={`Landed cost per unit: ${chosen.supplierName} (${chosen.country})`}>
+            <div className="-mt-1 mb-2 flex justify-end">{toggleDetails}</div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px] text-sm tabular-nums">
+              <table className="w-full whitespace-nowrap text-sm tabular-nums">
                 <thead>
                   <tr className="border-b border-slate-200 text-right text-xs uppercase tracking-wide text-slate-500">
                     <th className="py-2 pr-3 text-left">Product</th>
-                    <th className="py-2 pr-3">Qty</th>
-                    <th className="py-2 pr-3">Quote</th>
-                    <th className="py-2 pr-3">Base tariff</th>
-                    <th className="py-2 pr-3">Landed per unit</th>
-                    <th className="py-2 pr-3">Markup on quote</th>
-                    <th className="py-2">Line total</th>
+                    <th className="py-2 pr-3">Qty<Info term="qty" /></th>
+                    <th className="py-2 pr-3">Quote<Info term="unitPrice" /></th>
+                    <th className="py-2 pr-3">Tariff rate<Info term="totalTariffRate" /></th>
+                    <th className="py-2 pr-3">Landed per unit<Info term="landedUnit" /></th>
+                    <th className="py-2 pr-3">Markup on quote<Info term="markup" /></th>
+                    <th className="py-2">Line total<Info term="lineTotal" /></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -95,7 +134,14 @@ export default function CompareScreen() {
                       <td className="py-2 pr-3 text-left">{p.name}</td>
                       <td className="py-2 pr-3">{p.qty.toLocaleString()}</td>
                       <td className="py-2 pr-3">{usd(p.unitPrice, true)}</td>
-                      <td className="py-2 pr-3">{pct(p.baseRate)}</td>
+                      <td className="py-2 pr-3">
+                        {pct(p.baseRate + chosen.extraRate)}
+                        {details && (
+                          <div className="text-xs text-slate-500">
+                            {pct(p.baseRate)} base + {pct(chosen.extraRate)} extra
+                          </div>
+                        )}
+                      </td>
                       <td className="py-2 pr-3 font-semibold">{usd(p.landedUnit, true)}</td>
                       <td className="py-2 pr-3 text-slate-600">{p.unitPrice > 0 ? `+${pct(p.landedUnit / p.unitPrice - 1, 0)}` : ''}</td>
                       <td className="py-2">{usd(p.landedTotal)}</td>

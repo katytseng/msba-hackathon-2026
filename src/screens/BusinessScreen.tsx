@@ -1,7 +1,7 @@
 import type { Business, Product } from '../engine'
 import { pct } from '../format'
 import { APR_PRESETS, rates, useApp } from '../state'
-import { Button, Card, NextLink, NumberField, PageHeader } from '../components/ui'
+import { Button, Card, Info, NextLink, NumberField, PageHeader } from '../components/ui'
 
 const htsCodes = Object.entries(rates.baseTariffs)
 
@@ -28,10 +28,10 @@ export default function BusinessScreen() {
 
       <Card title="Cash" className="mb-5">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <NumberField label="Cash on hand" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
-          <NumberField label="Safety buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
+          <NumberField label="Cash on hand" info="cash" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
+          <NumberField label="Safety buffer" info="buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
           <div>
-            <NumberField label="Loan APR" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
+            <NumberField label="Loan APR" info="apr" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
             <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label="APR presets">
               {APR_PRESETS.map((r) => {
                 const active = Math.abs(business.apr - r) < 1e-9
@@ -52,7 +52,7 @@ export default function BusinessScreen() {
             </div>
           </div>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">Order date</span>
+            <span className="mb-1 flex items-center text-sm font-medium text-slate-700">Order date<Info term="orderDate" /></span>
             <input
               type="date"
               className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
@@ -69,12 +69,12 @@ export default function BusinessScreen() {
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="py-2 pr-2">Product</th>
-                <th className="py-2 pr-2">HTS code</th>
-                <th className="py-2 pr-2 text-right">Base tariff</th>
-                <th className="w-24 py-2 pr-2 text-right">Quantity</th>
-                <th className="w-28 py-2 pr-2 text-right">Sell price</th>
-                <th className="w-28 py-2 pr-2 text-right">Sales / week</th>
+                <th className="py-2 pr-2">Product<Info term="productName" /></th>
+                <th className="py-2 pr-2">HTS code<Info term="htsCode" /></th>
+                <th className="py-2 pr-2 text-right">Base tariff<Info term="baseTariff" /></th>
+                <th className="w-24 py-2 pr-2 text-right">Quantity<Info term="qty" /></th>
+                <th className="w-28 py-2 pr-2 text-right">Sell price<Info term="sellPrice" /></th>
+                <th className="w-32 py-2 pr-2 text-right">Sales / week<Info term="salesPerWeek" /></th>
                 <th className="py-2" />
               </tr>
             </thead>

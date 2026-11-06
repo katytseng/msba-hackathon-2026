@@ -1,6 +1,133 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useApp } from '../state'
+import { glossary, type GlossaryKey } from '../glossary'
+
+/**
+ * ⓘ button that shows a plain-English definition from glossary.ts.
+ * Hover to peek (hides when the cursor leaves); click to pin (stays until you click elsewhere or press Esc).
+ * The popover renders in a portal with fixed position so table scroll areas can't clip it.
+ */
+export function Info({ term }: { term: GlossaryKey }) {
+  const entry = glossary[term]
+  const [mode, setMode] = useState<'hover' | 'pinned' | null>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btn = useRef<HTMLButtonElement>(null)
+  const pop = useRef<HTMLDivElement>(null)
+  const hideTimer = useRef<number | undefined>(undefined)
+  const id = useId()
+  const open = mode !== null
+  const WIDTH = 272
+
+  const place = () => {
+    const r = btn.current?.getBoundingClientRect()
+    if (!r) return
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - WIDTH / 2), window.innerWidth - WIDTH - 8)
+    setPos({ top: r.bottom + 6, left })
+  }
+  const cancelHide = () => window.clearTimeout(hideTimer.current)
+
+  // Hover: show now, hide shortly after the cursor leaves (the grace period lets you move onto the popover).
+  const peek = () => {
+    cancelHide()
+    if (mode === null) {
+      place()
+      setMode('hover')
+    }
+  }
+  const unpeek = () => {
+    cancelHide()
+    hideTimer.current = window.setTimeout(() => setMode((m) => (m === 'hover' ? null : m)), 120)
+  }
+
+  const onClick = (e: ReactMouseEvent) => {
+    // Don't let a click inside a <label> also focus the input.
+    e.preventDefault()
+    e.stopPropagation()
+    cancelHide()
+    if (mode === 'pinned') return setMode(null)
+    place()
+    setMode('pinned')
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMode(null)
+        btn.current?.focus()
+      }
+    }
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!pop.current?.contains(t) && !btn.current?.contains(t)) setMode(null)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onDown)
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open])
+
+  useEffect(() => cancelHide, [])
+
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        onClick={onClick}
+        onMouseEnter={peek}
+        onMouseLeave={unpeek}
+        aria-label={`What is ${entry.term}?`}
+        aria-expanded={open}
+        aria-controls={open ? id : undefined}
+        className={`ml-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] text-[13px] leading-none normal-case transition ${
+          mode === 'pinned' ? 'text-blue-700' : 'text-slate-400 hover:text-blue-700'
+        } focus-visible:outline-2 focus-visible:outline-blue-600`}
+      >
+        ⓘ
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={pop}
+            id={id}
+            role="note"
+            onMouseEnter={cancelHide}
+            onMouseLeave={() => mode === 'hover' && unpeek()}
+            style={{ top: pos.top, left: pos.left, width: WIDTH }}
+            className="fixed z-50 rounded-lg border border-slate-200 bg-white p-3 text-left text-xs font-normal normal-case tracking-normal text-slate-700 shadow-lg"
+          >
+            <p className="mb-1 text-sm font-semibold text-slate-900">{entry.term}</p>
+            <p className="leading-relaxed">{entry.definition}</p>
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+/** Small "Details" / "Hide details" link button for revealing a breakdown. */
+export function DetailsToggle({ open, onToggle, label = 'details', controls }: { open: boolean; onToggle: () => void; label?: string; controls?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls={controls}
+      className="text-xs font-medium text-blue-700 hover:underline"
+    >
+      {open ? `Hide ${label}` : `Show ${label}`} <span aria-hidden>{open ? '▴' : '▾'}</span>
+    </button>
+  )
+}
 
 export function Card({ title, children, className = '' }: { title?: ReactNode; children: ReactNode; className?: string }) {
   return (
@@ -35,7 +162,9 @@ export function NumberField({
   step = 'any',
   className = '',
   compact = false,
+  info,
 }: {
+  info?: GlossaryKey
   label?: string
   value: number
   onChange: (v: number) => void
@@ -75,7 +204,10 @@ export function NumberField({
   if (!label || compact) return <div className={className}>{input}</div>
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
+      <span className="mb-1 flex items-center text-sm font-medium text-slate-700">
+        {label}
+        {info && <Info term={info} />}
+      </span>
       {input}
     </label>
   )
