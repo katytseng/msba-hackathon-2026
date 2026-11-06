@@ -68,7 +68,7 @@ export default function BusinessScreen() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="whitespace-nowrap border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="py-2 pr-2">Product<Info term="productName" /></th>
                 <th className="py-2 pr-2">HTS code<Info term="htsCode" /></th>
                 <th className="py-2 pr-2 text-right">Base tariff<Info term="baseTariff" /></th>
