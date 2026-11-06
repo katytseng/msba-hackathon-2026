@@ -1,6 +1,6 @@
 import type { Business, Product } from '../engine'
 import { pct } from '../format'
-import { rates, useApp } from '../state'
+import { APR_PRESETS, rates, useApp } from '../state'
 import { Button, Card, NextLink, NumberField, PageHeader } from '../components/ui'
 
 const htsCodes = Object.entries(rates.baseTariffs)
@@ -30,7 +30,27 @@ export default function BusinessScreen() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <NumberField label="Cash on hand" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
           <NumberField label="Safety buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
-          <NumberField label="Loan APR" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
+          <div>
+            <NumberField label="Loan APR" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
+            <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label="APR presets">
+              {APR_PRESETS.map((r) => {
+                const active = Math.abs(business.apr - r) < 1e-9
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setBiz({ apr: r })}
+                    className={`rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums ${
+                      active ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {Math.round(r * 100)}%
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Order date</span>
             <input
@@ -99,7 +119,7 @@ export default function BusinessScreen() {
               {products.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-6 text-center text-slate-500">
-                    No products yet. Click <b>Load sample</b> at the top, or add one.
+                    No products yet. Click <b>Reset to sample</b> at the top, or add one.
                   </td>
                 </tr>
               )}
