@@ -1,7 +1,7 @@
 // The system prompt and output schema for the plain-English explanation.
 // Bump PROMPT_VERSION whenever SYSTEM_PROMPT or OUTPUT_SCHEMA changes: it is part of the cache key,
 // so old cached answers are not served for a new prompt.
-export const PROMPT_VERSION = 'v1'
+export const PROMPT_VERSION = 'v2'
 
 const RULES = `You write short, plain-English explanations for a small business owner who imports products to resell. You receive the results of a landed cost and cash flow calculation as JSON. Explain what the numbers mean and what to do next.
 
@@ -48,7 +48,7 @@ Other fields:
 
 const FORMAT = `Output format
 
-Return a JSON object with exactly these string fields, each at most two sentences:
+Return a JSON object with exactly these string fields, each at most two sentences. Keep it brief: the headline under 15 words, every other field under 25 words. The owner reads this at a glance, and the details are on screen already.
 - headline: the single most important takeaway for this order.
 - supplier_choice: which supplier to use and the main reason.
 - cash_outlook: whether cash stays above the safety buffer, and what to do if it does not.

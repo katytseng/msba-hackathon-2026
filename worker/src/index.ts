@@ -133,6 +133,12 @@ export default {
       messages: [{ role: 'user', content: body }],
       output_config: { effort, format: { type: 'json_schema', schema: OUTPUT_SCHEMA } },
     }
+    // Rewording given numbers into a fixed JSON shape needs no reasoning step, and thinking costs
+    // about a second, which matters under the app's 5 s limit. Haiku 5.5 accepts "disabled" at effort
+    // high or below; other current models either reject it or default to it differently, so leave them.
+    if (/^claude-haiku-5/.test(model) && effort !== 'xhigh' && effort !== 'max') {
+      params.thinking = { type: 'disabled' }
+    }
     if (supportsFallbacks(model)) {
       // If a safety classifier declines, the API re-runs the request on Anthropic's recommended fallback model.
       params.betas = ['server-side-fallback-2026-07-01']

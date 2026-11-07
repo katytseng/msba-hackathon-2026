@@ -11,7 +11,10 @@ export type ExplainResult =
   | { source: 'ai'; explanation: Explanation; cached: boolean }
   | { source: 'fallback'; reason: 'not_configured' | 'timeout' | 'unavailable' | 'unverified'; detail?: string }
 
-export const EXPLAIN_URL: string | undefined = import.meta.env.VITE_EXPLAIN_URL || undefined
+// The deployed Worker. Its URL is public (the API key lives only inside the Worker), so it is the default;
+// set VITE_EXPLAIN_URL to point at a different Worker, e.g. a local `wrangler dev`.
+const DEFAULT_EXPLAIN_URL = 'https://landed-cost-explain.alessioyu.workers.dev/explain'
+export const EXPLAIN_URL: string | undefined = import.meta.env.VITE_EXPLAIN_URL || DEFAULT_EXPLAIN_URL
 export const TIMEOUT_MS = 5000
 
 // Successful answers for this browser session, keyed by payload, so re-opening a page doesn't re-ask.
