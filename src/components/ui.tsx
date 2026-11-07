@@ -89,8 +89,8 @@ export function Info({ term }: { term: GlossaryKey }) {
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         className={`ml-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] text-[13px] leading-none normal-case transition ${
-          mode === 'pinned' ? 'text-blue-700' : 'text-slate-400 hover:text-blue-700'
-        } focus-visible:outline-2 focus-visible:outline-blue-600`}
+          mode === 'pinned' ? 'text-ink' : 'text-muted hover:text-ink'
+        } focus-visible:outline-2 focus-visible:outline-ink`}
       >
         ⓘ
       </button>
@@ -103,9 +103,9 @@ export function Info({ term }: { term: GlossaryKey }) {
             onMouseEnter={cancelHide}
             onMouseLeave={() => mode === 'hover' && unpeek()}
             style={{ top: pos.top, left: pos.left, width: WIDTH }}
-            className="fixed z-50 rounded-lg border border-slate-200 bg-white p-3 text-left text-xs font-normal normal-case tracking-normal text-slate-700 shadow-lg"
+            className="fixed z-50 rounded-lg border border-line bg-surface p-3 text-left text-xs font-normal normal-case tracking-normal text-copy shadow-lg"
           >
-            <p className="mb-1 text-sm font-semibold text-slate-900">{entry.term}</p>
+            <p className="mb-1 text-sm font-semibold text-ink">{entry.term}</p>
             <p className="leading-relaxed">{entry.definition}</p>
           </div>,
           document.body,
@@ -153,7 +153,7 @@ export function DetailsToggle({ open, onToggle, label = 'details', controls }: {
       onClick={onToggle}
       aria-expanded={open}
       aria-controls={controls}
-      className="text-xs font-medium text-blue-700 hover:underline"
+      className="text-xs font-medium text-ink hover:underline"
     >
       {open ? `Hide ${label}` : `Show ${label}`} <span aria-hidden>{open ? '▴' : '▾'}</span>
     </button>
@@ -173,10 +173,10 @@ export function Card({
   className?: string
 }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
+    <section className={`rounded-xl border border-line bg-surface p-5 shadow-sm ${className}`}>
       {(title || actions) && (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          {title && <h2 className="text-base font-semibold text-slate-800">{title}</h2>}
+          {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
           {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
       )}
@@ -206,12 +206,12 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="relative grid rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs font-medium"
+      className="relative grid rounded-lg border border-line bg-ink-soft p-0.5 text-xs font-medium"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       <span
         aria-hidden
-        className="absolute inset-y-0.5 left-0.5 rounded-md bg-white shadow-sm ring-1 ring-slate-200 transition-transform duration-200 ease-out motion-reduce:transition-none"
+        className="absolute inset-y-0.5 left-0.5 rounded-md bg-surface shadow-sm ring-1 ring-line transition-transform duration-200 ease-out motion-reduce:transition-none"
         style={{ width: `calc((100% - 4px) / ${options.length})`, transform: `translateX(${index * 100}%)` }}
       />
       {options.map((o) => (
@@ -223,7 +223,7 @@ export function Segmented<T extends string>({
             checked={o.value === value}
             onChange={() => onChange(o.value)}
           />
-          <span className="block whitespace-nowrap rounded-md px-2.5 py-1 text-center text-slate-500 transition-colors peer-checked:text-slate-900 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 hover:text-slate-800">
+          <span className="block whitespace-nowrap rounded-md px-2.5 py-1 text-center text-muted transition-colors peer-checked:text-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink hover:text-ink">
             {o.label}
           </span>
         </label>
@@ -235,9 +235,9 @@ export function Segmented<T extends string>({
 export function PageHeader({ step, title, subtitle }: { step: number; title: string; subtitle?: string }) {
   return (
     <div className="mb-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Step {step}</p>
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-      {subtitle && <p className="mt-1 text-slate-600">{subtitle}</p>}
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink">Step {step}</p>
+      <h1 className="text-2xl font-bold text-ink">{title}</h1>
+      {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}
     </div>
   )
 }
@@ -277,8 +277,8 @@ export function NumberField({
   }, [value])
 
   const input = (
-    <div className="flex items-center rounded-md border border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-      {prefix && <span className="pl-2 text-sm text-slate-500">{prefix}</span>}
+    <div className="flex items-center rounded-md border border-line-strong bg-surface focus-within:border-ink focus-within:ring-1 focus-within:ring-ink">
+      {prefix && <span className="pl-2 text-sm text-muted">{prefix}</span>}
       <input
         type="number"
         inputMode="decimal"
@@ -292,13 +292,13 @@ export function NumberField({
           onChange(Number.isFinite(n) ? n / scale : 0)
         }}
       />
-      {suffix && <span className="pr-2 text-sm text-slate-500">{suffix}</span>}
+      {suffix && <span className="pr-2 text-sm text-muted">{suffix}</span>}
     </div>
   )
   if (!label || compact) return <div className={className}>{input}</div>
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 flex items-center text-sm font-medium text-slate-700">
+      <span className="mb-1 flex items-center text-sm font-medium text-copy">
         {label}
         {info && <Info term={info} />}
       </span>
@@ -321,9 +321,9 @@ export function Button({
   type?: 'button' | 'submit'
 }) {
   const styles = {
-    primary: 'bg-blue-700 text-white hover:bg-blue-800',
-    secondary: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50',
-    ghost: 'text-slate-600 hover:bg-slate-100',
+    primary: 'bg-ink text-white hover:bg-ink-hover',
+    secondary: 'border border-line-strong bg-surface text-ink hover:bg-page',
+    ghost: 'text-muted hover:bg-ink-soft',
     danger: 'text-red-700 hover:bg-red-50',
   }[variant]
   return (
@@ -345,10 +345,10 @@ export function NeedsData({ children }: { children: ReactNode }) {
   if (ranked.length === 0 || ranked[0].units === 0)
     return (
       <Card>
-        <p className="mb-3 text-slate-700">Add products and at least one supplier quote first.</p>
+        <p className="mb-3 text-copy">Add products and at least one supplier quote first.</p>
         <div className="flex gap-2">
           <Button onClick={resetToSample}>Reset to sample</Button>
-          <Link to="/order/business" className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50">
+          <Link to="/order/business" className="rounded-md border border-line-strong px-3 py-1.5 text-sm font-medium hover:bg-page">
             Go to inputs
           </Link>
         </div>
@@ -360,7 +360,7 @@ export function NeedsData({ children }: { children: ReactNode }) {
 export function NextLink({ to, children }: { to: string; children: ReactNode }) {
   return (
     <div className="mt-6 flex justify-end">
-      <Link to={to} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">
+      <Link to={to} className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink-hover">
         {children} →
       </Link>
     </div>
@@ -370,17 +370,17 @@ export function NextLink({ to, children }: { to: string; children: ReactNode }) 
 export function Callout({ tone, children }: { tone: 'good' | 'warn' | 'info'; children: ReactNode }) {
   const styles = {
     good: 'border-emerald-300 bg-emerald-50',
-    warn: 'border-amber-300 bg-amber-50',
-    info: 'border-blue-200 bg-blue-50',
+    warn: 'border-accent/40 bg-accent-soft',
+    info: 'border-line-strong bg-ink-soft',
   }[tone]
   const icon = { good: '✓', warn: '!', info: 'i' }[tone]
-  const iconStyle = { good: 'bg-emerald-600', warn: 'bg-amber-500', info: 'bg-blue-600' }[tone]
+  const iconStyle = { good: 'bg-emerald-600', warn: 'bg-accent', info: 'bg-ink' }[tone]
   return (
     <div className={`flex gap-3 rounded-lg border p-4 ${styles}`}>
       <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${iconStyle}`}>
         {icon}
       </span>
-      <div className="space-y-1 text-sm text-slate-800">{children}</div>
+      <div className="space-y-1 text-sm text-ink">{children}</div>
     </div>
   )
 }
@@ -388,14 +388,14 @@ export function Callout({ tone, children }: { tone: 'good' | 'warn' | 'info'; ch
 /** Click-to-expand section. Native details/summary: keyboard and screen reader friendly, closed by default. */
 export function Details({ summary, children }: { summary: string; children: ReactNode }) {
   return (
-    <details className="group mt-3 rounded-md border border-slate-200 bg-slate-50 text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-3 py-2 font-medium text-blue-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden">
+    <details className="group mt-3 rounded-md border border-line bg-page text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-3 py-2 font-medium text-ink hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-ink [&::-webkit-details-marker]:hidden">
         <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">
           ▸
         </span>
         {summary}
       </summary>
-      <div className="px-3 pb-3 pt-1 text-slate-700">{children}</div>
+      <div className="px-3 pb-3 pt-1 text-copy">{children}</div>
     </details>
   )
 }

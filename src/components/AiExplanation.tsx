@@ -56,7 +56,7 @@ export function AiExplanation() {
   return (
     <div
       className={`mb-5 rounded-xl p-[2px] shadow-sm transition-colors duration-300 motion-reduce:transition-none ${
-        isAi ? 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500' : 'bg-slate-200'
+        isAi ? 'bg-gradient-to-r from-ink via-ink to-accent' : 'bg-line'
       }`}
     >
     <Card
@@ -64,7 +64,7 @@ export function AiExplanation() {
         <span className="flex items-center gap-2">
           Our Recommendation
           {isAi && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-ink via-ink to-accent px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white">
               <span aria-hidden>✦</span> AI
             </span>
           )}
@@ -78,7 +78,7 @@ export function AiExplanation() {
       }
     >
       {!current && (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           {EXPLAIN_URL
             ? 'Get a short explanation of these results and what to do next. The AI only rewords the numbers the calculation produced; it does not calculate anything.'
             : 'Get a short summary of these results and what to do next.'}
@@ -87,26 +87,26 @@ export function AiExplanation() {
 
       {current?.status === 'loading' && (
         <div className="space-y-2" aria-live="polite" aria-busy="true">
-          <p className="text-sm text-slate-600">Writing a plain-English explanation (up to 5 seconds)…</p>
+          <p className="text-sm text-muted">Writing a plain-English explanation (up to 5 seconds)…</p>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-3 animate-pulse rounded bg-slate-100 motion-reduce:animate-none" style={{ width: `${90 - i * 15}%` }} />
+            <div key={i} className="h-3 animate-pulse rounded bg-ink-soft motion-reduce:animate-none" style={{ width: `${90 - i * 15}%` }} />
           ))}
         </div>
       )}
 
       {result && shown && (
         <div aria-live="polite">
-          {shown.headline && <p className="mb-3 text-base font-semibold text-slate-900">{shown.headline}</p>}
+          {shown.headline && <p className="mb-3 text-base font-semibold text-ink">{shown.headline}</p>}
           <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[8rem_1fr]">
             {ROWS.map((r) => (
               <div key={r.key} className="contents">
-                <dt className="font-medium text-slate-500">{r.label}</dt>
-                <dd className="text-slate-800">{shown[r.key]}</dd>
+                <dt className="font-medium text-muted">{r.label}</dt>
+                <dd className="text-ink">{shown[r.key]}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-xs text-slate-500">{shown.caveat}</p>
-          <p className="mt-3 border-t border-slate-100 pt-2 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-muted">{shown.caveat}</p>
+          <p className="mt-3 border-t border-line/60 pt-2 text-xs text-muted">
             {result.source === 'ai'
               ? 'Written by AI from the numbers on this page. Every dollar amount and percentage was checked against the calculation.'
               : FALLBACK_NOTE[result.reason]}

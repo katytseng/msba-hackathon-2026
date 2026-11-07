@@ -1,6 +1,7 @@
 import { productBaseRate, type Business, type Product } from '../engine'
-import { pct } from '../format'
-import { APR_PRESETS, rates, useApp } from '../state'
+import { Link } from 'react-router-dom'
+import { pct, usd } from '../format'
+import { rates, useApp } from '../state'
 import { Button, Card, Info, NumberField, PageHeader } from '../components/ui'
 import HtsPicker from '../components/HtsPicker'
 
@@ -25,51 +26,35 @@ export default function BusinessScreen() {
 
   return (
     <div>
-      <PageHeader step={1} title="Your business" subtitle="Cash today, the cushion you want to keep, and what you sell." />
+      <PageHeader step={1} title="Order details" subtitle="When you place this order, and what's in it." />
 
-      <Card title="Cash" className="mb-5">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <NumberField label="Cash on hand" info="cash" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
-          <NumberField label="Safety buffer" info="buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
-          <div>
-            <NumberField label="Loan APR" info="apr" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
-            <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label="APR presets">
-              {APR_PRESETS.map((r) => {
-                const active = Math.abs(business.apr - r) < 1e-9
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setBiz({ apr: r })}
-                    className={`rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums ${
-                      active ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {Math.round(r * 100)}%
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <label className="block">
-            <span className="mb-1 flex items-center text-sm font-medium text-slate-700">Order date<Info term="orderDate" /></span>
+      <Card className="mb-5">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <label className="block w-56">
+            <span className="mb-1 flex items-center text-sm font-medium text-copy">Order date<Info term="orderDate" /></span>
             <input
               type="date"
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-line-strong px-2 py-1.5 text-sm"
               value={business.orderDate}
               onChange={(e) => e.target.value && setBiz({ orderDate: e.target.value })}
             />
           </label>
+          <p className="flex-1 text-xs text-muted">
+            Cash on hand ({usd(business.cash)}), safety buffer ({usd(business.buffer)}) and loan APR ({pct(business.apr, 0)}) are set once for the whole
+            company on the dashboard's{' '}
+            <Link to="/finances" className="font-medium text-ink underline underline-offset-2">
+              Finances
+            </Link>{' '}
+            tab.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-slate-500">The safety buffer is the lowest balance you are comfortable with. We flag any week your cash falls below it.</p>
       </Card>
 
       <Card title="Products in this order">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="whitespace-nowrap border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="whitespace-nowrap border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                 <th className="py-2 pr-2">Product<Info term="productName" /></th>
                 <th className="py-2 pr-2">HTS code<Info term="htsCode" /></th>
                 <th className="py-2 pr-2 text-right">Base tariff<Info term="baseTariff" /></th>
@@ -81,10 +66,10 @@ export default function BusinessScreen() {
             </thead>
             <tbody>
               {products.map((p) => (
-                <tr key={p.id} className="border-b border-slate-100">
+                <tr key={p.id} className="border-b border-line/60">
                   <td className="py-2 pr-2">
                     <input
-                      className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+                      className="w-full rounded-md border border-line-strong px-2 py-1 text-sm"
                       value={p.name}
                       onChange={(e) => setProduct(p.id, { name: e.target.value })}
                     />
@@ -96,7 +81,7 @@ export default function BusinessScreen() {
                       onPick={(pick) => setProduct(p.id, pick)}
                     />
                   </td>
-                  <td className="py-2 pr-2 text-right tabular-nums text-slate-600">{pct(productBaseRate(rates, p))}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-muted">{pct(productBaseRate(rates, p))}</td>
                   <td className="py-2 pr-2">
                     <NumberField compact label="Quantity" value={p.qty} onChange={(v) => setProduct(p.id, { qty: Math.max(0, Math.round(v)) })} />
                   </td>
@@ -113,8 +98,8 @@ export default function BusinessScreen() {
               ))}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-500">
-                    No products yet. Click <b>Reset to sample</b> at the top, or add one.
+                  <td colSpan={7} className="py-6 text-center text-muted">
+                    No products yet. Click <b>Load sample</b> at the top, or add one.
                   </td>
                 </tr>
               )}
@@ -124,7 +109,7 @@ export default function BusinessScreen() {
         <div className="mt-3">
           <Button variant="secondary" onClick={addProduct}>+ Add product</Button>
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-muted">
           Search or browse the full USITC Harmonized Tariff Schedule, refreshed daily. Estimates use the general (most-favored-nation)
           rate and only support percent and Free rates; codes charged per kg, per unit or a mix of both can’t be picked yet.
         </p>

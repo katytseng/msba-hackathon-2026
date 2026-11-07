@@ -1,4 +1,4 @@
-# Landed Cost and Cash Check
+# Landfall - One stop for small importers: landed cost, tariffs, and cash 
 
 UCLA Anderson MSBA Vibathon 2026, Theme 06. A web app for small US importers: what an order really costs after tariffs, which supplier is cheapest, and whether your cash can carry the order until the stock sells.
 
