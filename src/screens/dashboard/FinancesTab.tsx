@@ -4,7 +4,7 @@ import { addDays } from '../../engine'
 import type { PortfolioCash, PortfolioWeek } from '../../engine/portfolio'
 import { niceDate, pct, shortDate, usd } from '../../format'
 import { APR_PRESETS, useApp } from '../../state'
-import { Card, Info, NumberField } from '../../components/ui'
+import { Card, Info, NumberField, Segmented, usePrefersReducedMotion } from '../../components/ui'
 import { belowRanges, Dot, Stat, todayIso, type Portfolio } from './shared'
 
 // Chart colors mirror the tokens in index.css (Recharts needs plain values).
@@ -23,10 +23,21 @@ export default function FinancesTab({ p }: { p: Portfolio }) {
     <div>
       {has && <Verdict pc={pc} />}
 
+      {/* Cash settings sit beside the chart they drive, so changing one shows its effect right away. */}
       <div className="mb-5 grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
         <CompanyCard startDate={has ? pc.startDate : null} />
         {has ? (
-          <dl className="grid grid-cols-2 gap-3">
+          <CashChart p={p} />
+        ) : (
+          <Card>
+            <p className="text-sm text-muted">Save an order to see your combined cash flow here.</p>
+          </Card>
+        )}
+      </div>
+
+      {has && (
+        <>
+          <dl className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             <Stat label={<>Lowest balance<Info term="lowestBalance" /></>} value={usd(pc.lowest)} sub={`week of ${niceDate(pc.weeks[pc.lowestWeek].date)}`} tone={pc.shortfall > 0 ? 'warn' : 'plain'} />
             <Stat
               label={pc.shortfall > 0 ? <>Need to borrow<Info term="belowBuffer" /></> : <>Headroom<Info term="headroom" /></>}
@@ -37,17 +48,7 @@ export default function FinancesTab({ p }: { p: Portfolio }) {
             <Stat label={<>Weeks under buffer<Info term="weeksBelowBuffer" /></>} value={String(pc.weeksBelowBuffer)} sub={pc.weeksBelowBuffer > 0 ? 'in total across the plan' : 'none'} />
             <Stat label={<>Interest to bridge<Info term="interest" /></>} value={usd(pc.interest)} sub={`at ${pct(company.apr, 0)} APR`} />
           </dl>
-        ) : (
-          <Card>
-            <p className="text-sm text-muted">Save an order to see your combined cash flow here.</p>
-          </Card>
-        )}
-      </div>
-
-      {has && (
-        <>
-          <CashChart p={p} />
-          <div className="my-5 grid items-start gap-5 md:grid-cols-2">
+          <div className="mb-5 grid items-start gap-5 md:grid-cols-2">
             <ComingUp p={p} />
             <Drivers p={p} />
           </div>
@@ -145,11 +146,13 @@ function CompanyCard({ startDate }: { startDate: string | null }) {
 function CashChart({ p }: { p: Portfolio }) {
   const { company } = useApp()
   const pc = p.pc
-  const [showAll, setShowAll] = useState(true)
+  const [period, setPeriod] = useState<'risk' | 'all'>('all')
+  const reducedMotion = usePrefersReducedMotion()
   // Zoomed view: the risk period, through the last week under the buffer (or the low point) plus a few weeks.
   const lastBelow = [...pc.weeks].reverse().find((w) => w.balance < company.buffer)?.week
   const riskEnd = Math.max(lastBelow ?? pc.lowestWeek, pc.lowestWeek) + 5
-  const end = showAll ? pc.weeks.length : Math.min(pc.weeks.length, Math.max(riskEnd, 8))
+  const canZoom = pc.weeks.length > Math.max(riskEnd, 8)
+  const end = period === 'all' || !canZoom ? pc.weeks.length : Math.min(pc.weeks.length, Math.max(riskEnd, 8))
   const shown = pc.weeks.slice(0, end)
   const dips = belowRanges(pc, company.buffer).map(([a, b]) => [a / 7, b / 7 - 1] as const)
   const todayWeek = Math.floor((Date.parse(todayIso()) - Date.parse(pc.startDate)) / (7 * 86_400_000))
@@ -158,10 +161,16 @@ function CashChart({ p }: { p: Portfolio }) {
     <Card
       title="Cash flow"
       actions={
-        pc.weeks.length > Math.max(riskEnd, 8) ? (
-          <button className="text-xs font-medium text-ink underline underline-offset-2" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'Zoom to the risk period' : 'Show the full plan'}
-          </button>
+        canZoom ? (
+          <Segmented
+            label="Weeks shown"
+            value={period}
+            onChange={setPeriod}
+            options={[
+              { value: 'risk', label: 'Risk period' },
+              { value: 'all', label: `All ${pc.weeks.length} weeks` },
+            ]}
+          />
         ) : null
       }
     >
@@ -195,7 +204,17 @@ function CashChart({ p }: { p: Portfolio }) {
               <ReferenceLine x={todayWeek} stroke={AXIS} label={{ value: 'Today', position: 'top', fontSize: 11, fill: MUTED }} />
             )}
             {pc.goesNegative && <ReferenceLine y={0} stroke="#b91c1c" />}
-            <Line type="linear" dataKey="balance" stroke={INK} strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
+            <Line
+              type="linear"
+              dataKey="balance"
+              stroke={INK}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 5 }}
+              isAnimationActive={!reducedMotion}
+              animationDuration={250}
+              animationEasing="ease-out"
+            />
             {pc.lowestWeek < end && <ReferenceDot x={pc.lowestWeek} y={pc.lowest} r={5} fill={ACCENT} stroke="#fff" strokeWidth={2} />}
           </LineChart>
         </ResponsiveContainer>

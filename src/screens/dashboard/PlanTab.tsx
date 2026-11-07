@@ -72,6 +72,7 @@ export default function PlanTab({ p, overrides, setOverrides }: { p: Portfolio; 
   return (
     <div>
       <TariffControls countries={countries} rateOf={rateOf} moved={moved} setOverrides={setOverrides} />
+      <ByItem advice={advice} at={at} />
 
       <p className="mb-4 text-xl font-semibold leading-snug text-ink" aria-live="polite">
         {switches.length === 0
@@ -86,7 +87,6 @@ export default function PlanTab({ p, overrides, setOverrides }: { p: Portfolio; 
       </dl>
 
       <Recommendations advice={advice} scenarioRates={scenarioRates} />
-      <ByItem advice={advice} />
       <OrderDeepDive p={p} scenarioRates={scenarioRates} rateOf={rateOf} />
     </div>
   )
@@ -162,7 +162,6 @@ function TariffControls({
           All removed
         </Button>
       </div>
-      <TariffSources />
     </Card>
   )
 }
@@ -232,75 +231,86 @@ function Recommendations({ advice, scenarioRates }: { advice: Advice[]; scenario
   )
 }
 
-// ---------- By item ----------
+// ---------- By item: who to order each item from ----------
 
 interface ItemRow {
   key: string
   name: string
   htsCode: string
-  orders: number
   units: number
   colors: string[]
-  landedNow: number
-  tariffNow: number
-  landedNext: number
+  /** Cheapest supplier for this item in each order that has it, at the slider tariffs. */
+  picks: { label: string; switched: boolean }[]
+  landedLast: number // what these units cost with the supplier used last time, at today's tariffs
+  landedNext: number // with the picked supplier, at the slider tariffs
+  tariffNext: number
 }
 
-function ByItem({ advice }: { advice: Advice[] }) {
+/**
+ * For every item across the saved orders: at the tariffs set on the sliders, which supplier is cheapest
+ * for that item (landed cost per unit, including its share of that supplier's freight and fees).
+ */
+function ByItem({ advice, at }: { advice: Advice[]; at: string }) {
   const rows = useMemo(() => {
     const map = new Map<string, ItemRow>()
     for (const { r, color, placedToday } of advice) {
       for (const prod of r.order.inputs.products) {
-        const now = placedToday.perProduct.find((x) => x.productId === prod.id)
-        const next = r.best.perProduct.find((x) => x.productId === prod.id)
-        if (!now || now.qty <= 0) continue
+        const last = placedToday.perProduct.find((x) => x.productId === prod.id)
+        if (!last || last.qty <= 0) continue
+        // Cheapest quoted supplier for this one item at the scenario tariffs.
+        let pick: { s: RankedResult; unit: number; tariffUnit: number } | null = null
+        for (const s of r.ranked) {
+          const line = s.perProduct.find((x) => x.productId === prod.id)
+          if (!line || line.unitPrice <= 0) continue
+          if (!pick || line.landedUnit < pick.unit) pick = { s, unit: line.landedUnit, tariffUnit: line.unitPrice * (line.baseRate + s.extraRate) }
+        }
         const key = `${prod.htsCode}|${prod.name.trim().toLowerCase()}`
-        const row = map.get(key) ?? { key, name: prod.name.trim(), htsCode: prod.htsCode, orders: 0, units: 0, colors: [], landedNow: 0, tariffNow: 0, landedNext: 0 }
-        row.orders += 1
-        row.units += now.qty
+        const row = map.get(key) ?? { key, name: prod.name.trim(), htsCode: prod.htsCode, units: 0, colors: [], picks: [], landedLast: 0, landedNext: 0, tariffNext: 0 }
+        row.units += last.qty
         row.colors.push(color)
-        row.landedNow += now.landedTotal
-        row.tariffNow += now.unitPrice * now.qty * (now.baseRate + placedToday.extraRate)
-        row.landedNext += next ? next.landedTotal : now.landedTotal
+        row.landedLast += last.landedTotal
+        row.landedNext += (pick?.unit ?? last.landedUnit) * last.qty
+        row.tariffNext += (pick?.tariffUnit ?? 0) * last.qty
+        if (pick) row.picks.push({ label: supplierLabel(pick.s), switched: pick.s.supplierId !== placedToday.supplierId })
         map.set(key, row)
       }
     }
-    return [...map.values()].sort((a, b) => b.orders - a.orders || b.units - a.units)
+    return [...map.values()].sort((a, b) => b.units - a.units)
   }, [advice])
 
   if (rows.length === 0) return null
-  const top = rows[0]
+  const switching = rows.filter((row) => row.picks.some((p) => p.switched)).length
+
   return (
-    <Card title="By item" className="mb-5">
-      <p className="-mt-2 mb-3 text-xs text-muted">
-        Every product across your saved orders, most often bought first. <b className="text-ink">{top.name}</b> is your most ordered item: {num(top.units)} units over{' '}
-        {top.orders} {top.orders === 1 ? 'order' : 'orders'}. "Next time" is the landed cost per unit with the best supplier at the tariffs above.
+    <Card title="Who to order each item from" className="mb-5">
+      <p className="-mt-2 mb-3 text-sm text-copy" aria-live="polite">
+        {switching === 0
+          ? `${at[0].toUpperCase()}${at.slice(1)}, keep buying every item from the same supplier as last time.`
+          : `${at[0].toUpperCase()}${at.slice(1)}, ${switching} of ${rows.length} ${rows.length === 1 ? 'item is' : 'items are'} cheaper from a different supplier.`}
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-sm tabular-nums">
+        <table className="w-full whitespace-nowrap text-sm tabular-nums">
           <thead>
             <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
               <th scope="col" className="py-2 pr-3">Item</th>
-              <th scope="col" className="py-2 pr-3 text-right">Orders</th>
-              <th scope="col" className="py-2 pr-3 text-right">Units bought</th>
+              <th scope="col" className="py-2 pr-3">Order from</th>
               <th scope="col" className="py-2 pr-3 text-right">Landed / unit</th>
               <th scope="col" className="py-2 pr-3 text-right">Tariffs / unit</th>
-              <th scope="col" className="py-2 pr-3 text-right">Next time / unit</th>
-              <th scope="col" className="py-2 text-right">Change</th>
+              <th scope="col" className="py-2 pr-3 text-right">Vs last time</th>
+              <th scope="col" className="py-2 text-right">Units bought</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
-              const now = row.landedNow / row.units
+            {rows.map((row) => {
+              const last = row.landedLast / row.units
               const next = row.landedNext / row.units
-              const diff = next - now
+              const diff = next - last
+              const labels = [...new Set(row.picks.map((p) => p.label))]
+              const switched = row.picks.some((p) => p.switched)
               return (
-                <tr key={row.key} className="border-b border-line/60">
+                <tr key={row.key} className={`border-b border-line/60 align-top ${switched ? 'bg-accent-soft' : ''}`}>
                   <td className="py-2 pr-3">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-ink">{row.name}</span>
-                      {i === 0 && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-ink">Most ordered</span>}
-                    </span>
+                    <span className="font-medium text-ink">{row.name}</span>
                     <span className="flex items-center gap-1.5 text-xs text-muted">
                       <span className="font-mono">{row.htsCode}</span>
                       <span className="flex gap-0.5">
@@ -310,20 +320,28 @@ function ByItem({ advice }: { advice: Advice[] }) {
                       </span>
                     </span>
                   </td>
-                  <td className="py-2 pr-3 text-right">{row.orders}</td>
-                  <td className="py-2 pr-3 text-right">{num(row.units)}</td>
-                  <td className="py-2 pr-3 text-right text-ink">{usd(now, true)}</td>
-                  <td className="py-2 pr-3 text-right text-muted">{usd(row.tariffNow / row.units, true)}</td>
-                  <td className="py-2 pr-3 text-right font-medium text-ink">{usd(next, true)}</td>
-                  <td className={`py-2 text-right text-xs ${Math.abs(diff) < 0.005 ? 'text-muted' : diff > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
-                    {Math.abs(diff) < 0.005 ? 'same' : `${diff > 0 ? '+' : '-'}${usd(Math.abs(diff), true)} (${pct(Math.abs(diff) / now, 1)})`}
+                  <td className="py-2 pr-3">
+                    <span className="font-semibold text-ink">{labels.join(', ') || 'No quote'}</span>
+                    <span className={`block text-xs ${switched ? 'font-medium text-accent-ink' : 'text-muted'}`}>
+                      {switched ? 'Switch from last time' : '✓ Same as last time'}
+                    </span>
                   </td>
+                  <td className="py-2 pr-3 text-right font-medium text-ink">{usd(next, true)}</td>
+                  <td className="py-2 pr-3 text-right text-muted">{usd(row.tariffNext / row.units, true)}</td>
+                  <td className={`py-2 pr-3 text-right text-xs ${Math.abs(diff) < 0.005 ? 'text-muted' : diff > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+                    {Math.abs(diff) < 0.005 ? 'same' : `${diff > 0 ? '+' : '-'}${usd(Math.abs(diff), true)} (${pct(Math.abs(diff) / last, 1)})`}
+                  </td>
+                  <td className="py-2 text-right">{num(row.units)}</td>
                 </tr>
               )
             })}
           </tbody>
         </table>
       </div>
+      <p className="mt-3 text-xs text-muted">
+        Landed cost per unit includes the item's share of that supplier's freight and fees. Buying items from different suppliers means separate
+        shipments, so check the order totals below before splitting an order.
+      </p>
     </Card>
   )
 }
@@ -616,36 +634,5 @@ function ProfitCard({ s, today }: { s: Scenario; today: Scenario }) {
         <p className="mt-2 text-xs text-muted">Before returns, platform fees, and sales tax.</p>
       </Details>
     </Card>
-  )
-}
-
-function TariffSources() {
-  return (
-    <Details summary="Where do these tariffs come from?">
-      <p className="mb-1 font-medium text-ink">Extra tariffs, by country</p>
-      <ul className="mb-3 space-y-1">
-        {Object.entries(rates.extraTariffs).map(([country, t]) => (
-          <li key={country}>
-            <b>
-              {country}: {pct(t.rate)}
-            </b>
-            . {t.note}. Source: <SourceLink source={t.source} url={t.url} />, {niceDate(t.date)}
-            {t.status ? ` (${t.status})` : ''}.
-          </li>
-        ))}
-      </ul>
-      <p className="mb-1 font-medium text-ink">Base tariffs, by product</p>
-      <p className="mb-3">Each product's base tariff is the HTS general rate for the code picked in its order. See an order's Summary step for codes and sources.</p>
-      <p className="text-xs text-muted">Last reviewed {niceDate(rates.lastReviewed)}. Estimates, not customs or legal advice.</p>
-    </Details>
-  )
-}
-
-function SourceLink({ source, url }: { source: string; url?: string }) {
-  if (!url) return <>{source}</>
-  return (
-    <a href={url} target="_blank" rel="noreferrer" className="text-ink underline">
-      {source}
-    </a>
   )
 }

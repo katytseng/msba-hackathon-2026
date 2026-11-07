@@ -17,7 +17,7 @@ export const ORDER_STEPS = [
   { key: 'summary', label: 'Summary', Screen: SummaryScreen },
 ] as const
 
-const SAVE_FROM = 3 // the save controls appear from step 4 (Cash check) on
+const SAVE_FROM = 4 // step 4 (Cash check) leads on to the summary; the save controls appear on step 5 (Summary)
 
 /**
  * Steps 1-4 (plus the summary) in a pop-up over the dashboard. The step lives in the URL: /order/:step.
