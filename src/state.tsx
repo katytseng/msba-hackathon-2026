@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
+  addDays,
   breakEven,
   cashTimeline,
   compareSuppliers,
@@ -113,14 +114,22 @@ interface AppState {
 const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [inputs, setInputsRaw] = useState<Inputs>(() => loadDraft() ?? emptyInputs())
+  const [rawInputs, setInputsRaw] = useState<Inputs>(() => loadDraft() ?? emptyInputs())
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const [store, setStore] = useState<OrderStore>(loadOrders)
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  useEffect(() => saveDraft(inputs), [inputs])
+  useEffect(() => saveDraft(rawInputs), [rawInputs])
   useEffect(() => saveOrders(store), [store])
+
+  // Cash, buffer and APR belong to the company (set on the dashboard's Finances tab), not to one order.
+  // Until the company is set, they fall back to the draft's values (e.g. from Load sample).
+  const company: Company = store.company ?? { cash: rawInputs.business.cash, buffer: rawInputs.business.buffer, apr: rawInputs.business.apr }
+  const inputs = useMemo<Inputs>(
+    () => ({ ...rawInputs, business: { ...rawInputs.business, cash: company.cash, buffer: company.buffer, apr: company.apr } }),
+    [rawInputs, company.cash, company.buffer, company.apr],
+  )
 
   const derived = useMemo(() => {
     try {
@@ -136,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value: AppState = {
     inputs,
-    setInputs: (fn) => setInputsRaw((prev) => fn(prev)),
+    setInputs: (fn) => setInputsRaw((prev) => fn({ ...prev, business: { ...prev.business, cash: company.cash, buffer: company.buffer, apr: company.apr } })),
     resetToSample: () => {
       setInputsRaw(structuredClone(sample))
       setSelectedId(null)
@@ -151,12 +160,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedId,
     ...derived,
     orders: store.orders,
-    company: store.company ?? { cash: inputs.business.cash, buffer: inputs.business.buffer, apr: inputs.business.apr },
-    setCompany: (patch) =>
-      setStore((st) => ({
-        ...st,
-        company: { ...(st.company ?? { cash: inputs.business.cash, buffer: inputs.business.buffer, apr: inputs.business.apr }), ...patch },
-      })),
+    company,
+    setCompany: (patch) => setStore((st) => ({ ...st, company: { ...(st.company ?? company), ...patch } })),
     editingId,
     saveOrder: (name, asNew = false) => {
       const chosen = derived.chosen
@@ -171,7 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setStore((st) => ({
         // The first saved order sets the company's cash, buffer and APR.
-        company: st.company ?? { cash: inputs.business.cash, buffer: inputs.business.buffer, apr: inputs.business.apr },
+        company: st.company ?? company,
         orders: st.orders.some((o) => o.id === order.id)
           ? st.orders.map((o) => (o.id === order.id ? order : o))
           : [...st.orders, order],
@@ -192,10 +197,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     addSampleOrders: () => {
       // Three orders from the sample, a month apart, so the dashboard has something to show.
+      // Dated relative to today so the tracker shows one order selling, one at sea and one still to ship.
       const plan = [
-        { name: 'Holiday restock', date: '2026-11-09', scale: 1 },
-        { name: 'Spring line', date: '2026-12-14', scale: 0.8 },
-        { name: 'Summer basics', date: '2027-01-18', scale: 1.2 },
+        { name: 'Holiday restock', date: addDays(today(), -84), scale: 1 },
+        { name: 'Spring line', date: addDays(today(), -35), scale: 0.8 },
+        { name: 'Summer basics', date: addDays(today(), 14), scale: 1.2 },
       ]
       setStore((st) => {
         const orders = [...st.orders]

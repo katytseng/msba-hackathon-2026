@@ -26,7 +26,7 @@ export default function SummaryScreen() {
 
   return (
     <div>
-      <PageHeader step={6} title="Owner summary" subtitle="Your two decisions, and where every number came from." />
+      <PageHeader step={5} title="Owner summary" subtitle="Your two decisions, and where every number came from." />
       <NeedsData>
         {chosen && cash && (
           <>

@@ -1,6 +1,7 @@
+import { useRef } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppProvider } from './state'
-import DashboardScreen from './screens/DashboardScreen'
+import DashboardScreen, { DASH_TABS, type DashTab } from './screens/DashboardScreen'
 import OrderModal, { ORDER_STEPS } from './components/OrderModal'
 import { LogoMark } from './components/Logo'
 
@@ -8,10 +9,17 @@ const STEP_KEYS = ORDER_STEPS.map((s) => s.key as string)
 
 function Shell() {
   const { pathname } = useLocation()
+  // The tab behind the order pop-up is whichever dashboard tab you were last on.
+  const lastTab = useRef<DashTab>('orders')
+  const onTab = DASH_TABS.find((t) => t.path === pathname)
+  if (onTab) lastTab.current = onTab.key
+
+  // The tariff what-if moved out of the pop-up into the dashboard's Plan tab.
+  if (pathname === '/tariffs' || pathname === '/order/tariffs') return <Navigate to="/plan" replace />
   // Old step links (/#/business) open that step in the order pop-up.
   const oldStep = pathname.slice(1)
   if (STEP_KEYS.includes(oldStep)) return <Navigate to={`/order/${oldStep}`} replace />
-  if (pathname !== '/dashboard' && !pathname.startsWith('/order/')) return <Navigate to="/dashboard" replace />
+  if (!onTab && !pathname.startsWith('/order/')) return <Navigate to="/dashboard" replace />
 
   return (
     <div className="min-h-screen">
@@ -25,7 +33,7 @@ function Shell() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <DashboardScreen />
+        <DashboardScreen tab={lastTab.current} />
       </main>
       <footer className="mx-auto flex max-w-6xl items-center gap-2 px-4 pb-8 text-xs text-muted">
         <LogoMark size={20} className="shrink-0" />
@@ -34,7 +42,7 @@ function Shell() {
         </p>
       </footer>
       <Routes>
-        <Route path="/order/:step" element={<OrderModal />} />
+        <Route path="/order/:step" element={<OrderModal returnTo={DASH_TABS.find((t) => t.key === lastTab.current)!.path} />} />
         <Route path="*" element={null} />
       </Routes>
     </div>

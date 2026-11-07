@@ -1,6 +1,7 @@
 import { productBaseRate, type Business, type Product } from '../engine'
-import { pct } from '../format'
-import { APR_PRESETS, rates, useApp } from '../state'
+import { Link } from 'react-router-dom'
+import { pct, usd } from '../format'
+import { rates, useApp } from '../state'
 import { Button, Card, Info, NumberField, PageHeader } from '../components/ui'
 import HtsPicker from '../components/HtsPicker'
 
@@ -25,34 +26,11 @@ export default function BusinessScreen() {
 
   return (
     <div>
-      <PageHeader step={1} title="Your business" subtitle="Cash today, the cushion you want to keep, and what you sell." />
+      <PageHeader step={1} title="Order details" subtitle="When you place this order, and what's in it." />
 
-      <Card title="Cash" className="mb-5">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <NumberField label="Cash on hand" info="cash" prefix="$" value={business.cash} onChange={(v) => setBiz({ cash: v })} />
-          <NumberField label="Safety buffer" info="buffer" prefix="$" value={business.buffer} onChange={(v) => setBiz({ buffer: v })} />
-          <div>
-            <NumberField label="Loan APR" info="apr" suffix="%" scale={100} value={business.apr} onChange={(v) => setBiz({ apr: v })} />
-            <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label="APR presets">
-              {APR_PRESETS.map((r) => {
-                const active = Math.abs(business.apr - r) < 1e-9
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setBiz({ apr: r })}
-                    className={`rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums ${
-                      active ? 'border-ink bg-ink text-white' : 'border-line-strong text-muted hover:bg-page'
-                    }`}
-                  >
-                    {Math.round(r * 100)}%
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <label className="block">
+      <Card className="mb-5">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <label className="block w-56">
             <span className="mb-1 flex items-center text-sm font-medium text-copy">Order date<Info term="orderDate" /></span>
             <input
               type="date"
@@ -61,8 +39,15 @@ export default function BusinessScreen() {
               onChange={(e) => e.target.value && setBiz({ orderDate: e.target.value })}
             />
           </label>
+          <p className="flex-1 text-xs text-muted">
+            Cash on hand ({usd(business.cash)}), safety buffer ({usd(business.buffer)}) and loan APR ({pct(business.apr, 0)}) are set once for the whole
+            company on the dashboard's{' '}
+            <Link to="/finances" className="font-medium text-ink underline underline-offset-2">
+              Finances
+            </Link>{' '}
+            tab.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted">The safety buffer is the lowest balance you are comfortable with. We flag any week your cash falls below it.</p>
       </Card>
 
       <Card title="Products in this order">
@@ -114,7 +99,7 @@ export default function BusinessScreen() {
               {products.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-6 text-center text-muted">
-                    No products yet. Click <b>Reset to sample</b> at the top, or add one.
+                    No products yet. Click <b>Load sample</b> at the top, or add one.
                   </td>
                 </tr>
               )}

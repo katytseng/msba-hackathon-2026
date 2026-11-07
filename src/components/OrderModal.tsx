@@ -7,22 +7,23 @@ import BusinessScreen from '../screens/BusinessScreen'
 import SuppliersScreen from '../screens/SuppliersScreen'
 import CompareScreen from '../screens/CompareScreen'
 import CashScreen from '../screens/CashScreen'
-import TariffScreen from '../screens/TariffScreen'
 import SummaryScreen from '../screens/SummaryScreen'
 
 export const ORDER_STEPS = [
-  { key: 'business', label: 'Business', Screen: BusinessScreen },
+  { key: 'business', label: 'Order details', Screen: BusinessScreen },
   { key: 'suppliers', label: 'Supplier quotes', Screen: SuppliersScreen },
   { key: 'compare', label: 'Compare', Screen: CompareScreen },
   { key: 'cash', label: 'Cash check', Screen: CashScreen },
-  { key: 'tariffs', label: 'Tariff what-if', Screen: TariffScreen },
   { key: 'summary', label: 'Summary', Screen: SummaryScreen },
 ] as const
 
-const SAVE_FROM = 4 // the save controls appear from step 5 on
+const SAVE_FROM = 3 // the save controls appear from step 4 (Cash check) on
 
-/** Steps 1-5 (plus the summary) in a pop-up over the dashboard. The step lives in the URL: /order/:step */
-export default function OrderModal() {
+/**
+ * Steps 1-4 (plus the summary) in a pop-up over the dashboard. The step lives in the URL: /order/:step.
+ * Company cash and the tariff what-if live on the dashboard's Finances and Plan tabs.
+ */
+export default function OrderModal({ returnTo = '/dashboard' }: { returnTo?: string }) {
   const { step } = useParams()
   const navigate = useNavigate()
   const { chosen, inputs, orders, editingId, saveOrder, resetToSample, reset } = useApp()
@@ -37,7 +38,7 @@ export default function OrderModal() {
     setName(editing?.name ?? '')
   }, [editing?.id, editing?.name])
 
-  const close = () => navigate('/dashboard')
+  const close = () => navigate(returnTo)
   const go = (i: number) => navigate(`/order/${ORDER_STEPS[i].key}`)
 
   // Esc closes; the page behind doesn't scroll; each step starts at the top.
@@ -113,7 +114,7 @@ export default function OrderModal() {
           <current.Screen />
         </div>
 
-        {/* Footer: back / next, and save from step 5 */}
+        {/* Footer: back / next, and save from the cash check on */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface px-5 py-3">
           <div>
             {idx > 0 && (

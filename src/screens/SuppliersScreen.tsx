@@ -43,7 +43,7 @@ export default function SuppliersScreen() {
 
       {products.length === 0 && (
         <Card className="mb-5">
-          <p className="text-muted">Add products on the Business step first, or click <b>Reset to sample</b>.</p>
+          <p className="text-muted">Add products on the Order details step first, or click <b>Reset to sample</b>.</p>
         </Card>
       )}
 
