@@ -1,12 +1,12 @@
 {
-  "release": "2026HTSRev22",
-  "title": "Revision 22 (2026)",
-  "effective": "10/30/2026",
-  "fetchedAt": "2026-11-06T23:11:27.285Z",
+  "release": "2026HTSRev23",
+  "title": "Revision 23 (2026)",
+  "effective": "11/10/2026",
+  "fetchedAt": "2026-11-10T18:41:32.603Z",
   "source": "USITC Harmonized Tariff Schedule REST API, https://hts.usitc.gov/reststop",
   "rows": 32190,
   "ratedLines": 23193,
   "supportedLines": 20581,
   "chapter99Lines": 3112,
-  "chapter99Hash": "088bae130ef4e592"
+  "chapter99Hash": "ae1f4f5acb3cb651"
 }
