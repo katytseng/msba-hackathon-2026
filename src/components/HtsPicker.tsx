@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import { ancestors, labelFor, searchHts, type HtsData, type HtsEntry } from '../hts/data'
 import { loadHts, recentCodes, rememberCode, useHts } from '../hts/load'
 import { CHAPTERS, SECTIONS, pad2 } from '../hts/sections'
-import { pct } from '../format'
+import { niceDate, pct } from '../format'
+import { htsStatus } from '../rateRows'
 import { rates } from '../state'
 
 export interface HtsPick {
@@ -331,7 +332,7 @@ function NavRow({ onClick, left, text, right }: { onClick: () => void; left: str
 function Footer({ data }: { data: HtsData | null }) {
   return (
     <p className="border-t border-line bg-page px-4 py-2.5 text-xs leading-5 text-muted">
-      {data ? `USITC HTS ${data.title}, checked ${new Date(data.fetchedAt).toLocaleDateString()}. ` : ''}
+      {data ? `USITC HTS ${data.title}, last checked ${niceDate(htsStatus.checkedAt)}. ` : ''}
       Only percent and Free rates can be estimated. Per-kg, per-unit and mixed rates are shown but can’t be picked.
     </p>
   )

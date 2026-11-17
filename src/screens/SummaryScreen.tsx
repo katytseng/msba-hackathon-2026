@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { niceDate, usd } from '../format'
-import { useApp } from '../state'
+import { rates, useApp } from '../state'
 import { nextOrderSentences, supplierSentence, thisOrderSentences, DISCLAIMER } from '../summaries'
 import { Button, Callout, Card, Info, NeedsData, PageHeader } from '../components/ui'
 import type { GlossaryKey } from '../glossary'
 import { AiExplanation } from '../components/AiExplanation'
 import { PrintReport, type ShownRecommendation } from '../components/PrintReport'
-import { ASSUMPTIONS, useRateRows, type RateRow } from '../rateRows'
+import { ASSUMPTIONS, htsStatus, useRateRows, type RateRow } from '../rateRows'
 
 export default function SummaryScreen() {
   const { inputs, ranked, chosen, cash, be } = useApp()
@@ -95,7 +95,10 @@ export default function SummaryScreen() {
                     <li key={a}>{a}</li>
                   ))}
                 </ul>
-                <p className="mt-4">{DISCLAIMER}</p>
+                <p className="mt-4">
+                  HTS schedule: {htsStatus.title}, checked daily, last checked {niceDate(htsStatus.checkedAt)}. Rates not taken from the schedule (extra tariffs, fees, the sample codes) were last reviewed {niceDate(rates.lastReviewed)}.
+                </p>
+                <p className="mt-2">{DISCLAIMER}</p>
               </div>
             </Card>
           </>

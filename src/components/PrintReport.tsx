@@ -5,7 +5,7 @@ import { rates, useApp } from '../state'
 import { templateExplanation } from '../ai/fallback'
 import type { Explanation } from '../ai/explain'
 import { DISCLAIMER } from '../summaries'
-import { ASSUMPTIONS, useRateRows } from '../rateRows'
+import { ASSUMPTIONS, htsStatus, useRateRows } from '../rateRows'
 import { LogoMark } from './Logo'
 
 export interface ShownRecommendation {
@@ -220,7 +220,10 @@ export function PrintReport({ recommendation }: { recommendation: ShownRecommend
             <li key={a}>{a}</li>
           ))}
         </ul>
-        <p className="mt-2">{DISCLAIMER} Rates checked {niceDate(rates.lastReviewed)}.</p>
+        <p className="mt-2">
+          HTS schedule: {htsStatus.title}, checked daily, last checked {niceDate(htsStatus.checkedAt)}. Rates not taken from the schedule (extra tariffs, fees, the sample codes) were last reviewed {niceDate(rates.lastReviewed)}.
+        </p>
+        <p className="mt-1">{DISCLAIMER}</p>
       </section>
     </div>,
     document.body,

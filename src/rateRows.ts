@@ -2,6 +2,7 @@ import { niceDate, pct, usd } from './format'
 import { rates, useApp } from './state'
 import { productBaseRate } from './engine'
 import htsMeta from '../public/hts/meta.json'
+import htsChecked from '../public/hts/checked.json'
 
 export const ASSUMPTIONS = [
   'Prices are FOB (you pay freight from the port of origin).',
@@ -12,6 +13,14 @@ export const ASSUMPTIONS = [
   'No returns, platform fees or sales tax.',
   'Freight and fixed fees are spread across products by share of product value.',
 ]
+
+/** The HTS schedule behind the code picker: which release it is, and the day the daily sync last confirmed it current. */
+export const htsStatus = {
+  title: htsMeta.title,
+  effective: htsMeta.effective,
+  // checked.json is written by every daily sync run; meta.json only changes on a new release, so it is the fallback.
+  checkedAt: htsChecked.checkedAt ?? htsMeta.fetchedAt.slice(0, 10),
+}
 
 export interface RateRow {
   key: string
@@ -40,9 +49,13 @@ export function useRateRows(): RateRow[] {
         value: pct(productBaseRate(rates, p)),
         source: `USITC Harmonized Tariff Schedule${p.htsRelease ? `, ${p.htsRelease}` : ''}`,
         url: 'https://hts.usitc.gov/',
-        date: htsMeta.fetchedAt.slice(0, 10),
+        date: htsStatus.checkedAt,
       })
-    else rows.push({ key: `hts-${p.htsCode}`, name: `Base tariff, HTS ${p.htsCode} (${r.description})`, value: pct(r.rate), source: r.source, url: r.url, date: r.date })
+    else {
+      // Typed into rates.json by hand. The daily sync checks it against the schedule: if it still matches, show the check date.
+      const matches = (htsChecked as { baseRatesMatch?: Record<string, boolean> }).baseRatesMatch?.[p.htsCode] === true
+      rows.push({ key: `hts-${p.htsCode}`, name: `Base tariff, HTS ${p.htsCode} (${r.description})`, value: pct(r.rate), source: r.source, url: r.url, date: matches ? htsStatus.checkedAt : r.date })
+    }
   }
   for (const c of usedCountries) {
     const r = rates.extraTariffs[c]

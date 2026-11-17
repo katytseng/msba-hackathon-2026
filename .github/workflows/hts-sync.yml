@@ -1,4 +1,5 @@
-# Daily check for a new USITC Harmonized Tariff Schedule release.
+# Daily check for a new USITC Harmonized Tariff Schedule release. Every run also records the check date
+# (public/hts/checked.json), so the app shows when the schedule was last confirmed current.
 # When the release changes, it regenerates public/hts/ (the data behind the HTS code picker),
 # commits it to main and starts the Pages deploy. If Chapter 99 (extra tariffs such as
 # Section 301) changed, it opens an issue so someone re-checks extraTariffs in rates.json by hand.
@@ -38,7 +39,7 @@ jobs:
         run: node scripts/sync-hts.mjs ${{ inputs.force && '--force' || '' }}
       - name: Commit new data
         id: commit
-        if: steps.sync.outputs.changed == 'true'
+        if: steps.sync.outputs.changed == 'true' || steps.sync.outputs.checked_changed == 'true'
         run: |
           git add public/hts data/hts
           if git diff --cached --quiet; then
@@ -47,7 +48,12 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Sync HTS data to ${{ steps.sync.outputs.release }}"
+          if [ "${{ steps.sync.outputs.changed }}" = "true" ]; then
+            MSG="Sync HTS data to ${{ steps.sync.outputs.release }}"
+          else
+            MSG="Daily HTS check: ${{ steps.sync.outputs.release }} is still current"
+          fi
+          git commit -m "$MSG"
           git push
           echo "pushed=true" >> "$GITHUB_OUTPUT"
       - name: Deploy the site
