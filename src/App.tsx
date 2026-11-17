@@ -23,23 +23,25 @@ function Shell() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <LogoMark size={40} className="shrink-0" />
+      <header className="border-b border-line">
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-5 sm:px-10">
+          <LogoMark size={44} className="shrink-0" />
           <div>
-            <p className="text-xl leading-tight font-extrabold tracking-tight text-ink">Landfall</p>
-            <p className="text-xs text-muted">What your orders really cost after tariffs, and whether your cash can carry them.</p>
+            <p className="font-serif text-[1.625rem] leading-none font-semibold tracking-tight text-ink">Landfall</p>
+            <p className="mt-1.5 text-[0.8125rem] leading-snug text-muted">What your orders really cost after tariffs, and whether your cash can carry them.</p>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-10 sm:pt-12">
         <DashboardScreen tab={lastTab.current} />
       </main>
-      <footer className="mx-auto flex max-w-6xl items-center gap-2 px-4 pb-8 text-xs text-muted">
-        <LogoMark size={20} className="shrink-0" />
-        <p>
-          <span className="font-semibold text-ink">Landfall</span>. Estimates, not customs or legal advice. Rates from rates.json, see an order's Summary step for sources and dates.
-        </p>
+      <footer className="mx-auto max-w-6xl px-5 pb-12 sm:px-10">
+        <div className="flex items-center gap-3 border-t border-line pt-6 text-xs leading-5 text-muted">
+          <LogoMark size={20} className="shrink-0" />
+          <p>
+            <span className="font-semibold text-ink">Landfall</span>. Estimates, not customs or legal advice. Rates from rates.json, see an order's Summary step for sources and dates.
+          </p>
+        </div>
       </footer>
       <Routes>
         <Route path="/order/:step" element={<OrderModal returnTo={DASH_TABS.find((t) => t.key === lastTab.current)!.path} />} />

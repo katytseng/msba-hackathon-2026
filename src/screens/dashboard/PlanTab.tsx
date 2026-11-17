@@ -17,7 +17,7 @@ import {
 import { reorderAdvice, withExtraRates, type Company, type ReorderAdvice, type SavedOrder } from '../../engine/portfolio'
 import { niceDate, num, pct, shortDate, usd } from '../../format'
 import { rates, useApp } from '../../state'
-import { Button, Card, Details } from '../../components/ui'
+import { Button, Card, Check, Details } from '../../components/ui'
 import { Dot, Stat, supplierLabel, type Portfolio } from './shared'
 
 const RANGE_ABOVE_TODAY = 0.3
@@ -53,8 +53,8 @@ export default function PlanTab({ p, overrides, setOverrides }: { p: Portfolio; 
   if (p.analyses.length === 0) {
     return (
       <Card>
-        <p className="mb-1 font-semibold text-ink">Nothing to plan yet.</p>
-        <p className="text-sm text-muted">Save at least one order on the Orders tab. Then set the tariffs you expect here and see who to buy from next time, order by order and item by item.</p>
+        <h2 className="mb-2 text-section text-ink">Nothing to plan yet.</h2>
+        <p className="max-w-[62ch] text-body text-muted">Save at least one order on the Orders tab. Then set the tariffs you expect here and see who to buy from next time, order by order and item by item.</p>
       </Card>
     )
   }
@@ -74,13 +74,13 @@ export default function PlanTab({ p, overrides, setOverrides }: { p: Portfolio; 
       <TariffControls countries={countries} rateOf={rateOf} moved={moved} setOverrides={setOverrides} />
       <ByItem advice={advice} at={at} />
 
-      <p className="mb-4 text-xl font-semibold leading-snug text-ink" aria-live="polite">
+      <p className="mt-4 mb-8 max-w-[44ch] font-serif text-[1.625rem] leading-9 font-semibold tracking-tight text-ink" aria-live="polite">
         {switches.length === 0
           ? `Reorder everything ${at}: stay with the same supplier for every order.`
           : `Reorder everything ${at}: switch supplier for ${switches.length} of ${advice.length} ${advice.length === 1 ? 'order' : 'orders'} and save ${usd(totalSaved)}.`}
       </p>
 
-      <dl className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="mb-14 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-3">
         <Stat label="Reorder everything" value={usd(totalNext)} sub={<VsLine diff={totalNext - totalToday} label="vs these orders today" />} />
         <Stat label="Tariffs on the reorder" value={usd(tariffsNext)} sub={<VsLine diff={tariffsNext - tariffsToday} label="vs today" />} />
         <Stat label="Saved by switching" value={usd(totalSaved)} sub={switches.length ? `${switches.length} supplier ${switches.length === 1 ? 'change' : 'changes'}` : 'no changes needed'} tone={totalSaved > 0.5 ? 'good' : 'plain'} />
@@ -95,7 +95,7 @@ export default function PlanTab({ p, overrides, setOverrides }: { p: Portfolio; 
 function VsLine({ diff, label }: { diff: number; label: string }) {
   if (Math.round(Math.abs(diff)) === 0) return <>same as today</>
   return (
-    <span className={diff > 0 ? 'text-red-700' : 'text-emerald-700'}>
+    <span className={diff > 0 ? 'text-bad' : 'text-good'}>
       {usd(Math.abs(diff))} {diff > 0 ? 'more' : 'less'} <span className="text-muted">{label}</span>
     </span>
   )
@@ -116,11 +116,11 @@ function TariffControls({
 }) {
   const setRate = (c: string, r: number) => setOverrides((m) => ({ ...m, [c]: Math.max(0, Math.round(r * 1000) / 1000) }))
   return (
-    <Card title="Tariffs you expect" className="mb-5">
-      <p className="-mt-2 mb-4 text-xs text-muted">
+    <Card title="Tariffs you expect" className="mb-10">
+      <p className="-mt-3 mb-7 text-[0.8125rem] text-muted">
         Placed orders stay as they are. Move a country's extra tariff to see who to order from if you buy the same items again.
       </p>
-      <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
         {countries.map((c) => {
           const today = extraRateFor(rates, c)
           const r = rateOf(c)
@@ -145,20 +145,20 @@ function TariffControls({
                 value={r * 100}
                 aria-valuetext={pct(r)}
                 onChange={(e) => setRate(c, parseFloat(e.target.value) / 100)}
-                className="w-full accent-ink"
+                className="range mt-2.5"
               />
             </div>
           )
         })}
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button variant={moved ? 'secondary' : 'primary'} className="!px-2.5 !py-1 text-xs" onClick={() => setOverrides(() => ({}))}>
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <Button variant={moved ? 'secondary' : 'primary'} className="!px-3 !py-1.5 text-xs" onClick={() => setOverrides(() => ({}))}>
           Today's rates
         </Button>
-        <Button variant="secondary" className="!px-2.5 !py-1 text-xs" onClick={() => setOverrides(() => Object.fromEntries(countries.map((c) => [c, extraRateFor(rates, c) + 0.1])))}>
+        <Button variant="secondary" className="!px-3 !py-1.5 text-xs" onClick={() => setOverrides(() => Object.fromEntries(countries.map((c) => [c, extraRateFor(rates, c) + 0.1])))}>
           All +10 points
         </Button>
-        <Button variant="secondary" className="!px-2.5 !py-1 text-xs" onClick={() => setOverrides(() => Object.fromEntries(countries.map((c) => [c, 0])))}>
+        <Button variant="secondary" className="!px-3 !py-1.5 text-xs" onClick={() => setOverrides(() => Object.fromEntries(countries.map((c) => [c, 0])))}>
           All removed
         </Button>
       </div>
@@ -172,17 +172,17 @@ type Advice = { r: ReorderAdvice; color: string; placedToday: RankedResult }
 
 function Recommendations({ advice, scenarioRates }: { advice: Advice[]; scenarioRates: Rates }) {
   return (
-    <Card title="Who to order from next time" className="mb-5">
+    <Card title="Who to order from next time" className="mb-10">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-              <th scope="col" className="py-2 pr-3">Order</th>
-              <th scope="col" className="py-2 pr-3">Last time</th>
-              <th scope="col" className="py-2 pr-3">Next time</th>
-              <th scope="col" className="py-2 pr-3 text-right">Reorder cost</th>
-              <th scope="col" className="py-2 pr-3 text-right">Vs last time</th>
-              <th scope="col" className="py-2">Switch point</th>
+            <tr className="border-b border-line-strong text-left text-[0.8125rem] text-muted [&>:first-child]:pl-3 [&>:last-child]:pr-3">
+              <th scope="col" className="py-3 pr-5">Order</th>
+              <th scope="col" className="py-3 pr-5">Last time</th>
+              <th scope="col" className="py-3 pr-5">Next time</th>
+              <th scope="col" className="py-3 pr-5 text-right">Reorder cost</th>
+              <th scope="col" className="py-3 pr-5 text-right">Vs last time</th>
+              <th scope="col" className="py-3">Switch point</th>
             </tr>
           </thead>
           <tbody>
@@ -191,32 +191,32 @@ function Recommendations({ advice, scenarioRates }: { advice: Advice[]; scenario
               const country = placedToday.country
               const flip = countryFlipRate(r.order.inputs, scenarioRates, country)
               return (
-                <tr key={r.order.id} className={`border-b border-line/60 align-top ${better ? 'bg-accent-soft' : ''}`}>
-                  <td className="py-2.5 pr-3">
+                <tr key={r.order.id} className={`border-b border-line align-baseline [&>:first-child]:pl-3 [&>:last-child]:pr-3 ${better ? 'bg-good-soft' : ''}`}>
+                  <td className="py-4 pr-5">
                     <span className="flex items-center gap-2 font-medium text-ink">
                       <Dot color={color} />
                       {r.order.name}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-3 text-copy">{supplierLabel(placedToday)}</td>
-                  <td className="py-2.5 pr-3">
+                  <td className="py-4 pr-5 text-copy">{supplierLabel(placedToday)}</td>
+                  <td className="py-4 pr-5">
                     {better ? (
                       <>
                         <span className="font-semibold text-ink">Switch to {supplierLabel(r.best)}</span>
-                        <span className="block text-xs text-emerald-700">saves {usd(r.savings)} vs staying</span>
+                        <span className="block text-xs text-good">saves {usd(r.savings)} vs staying</span>
                       </>
                     ) : (
                       <>
-                        <span className="font-medium text-ink">✓ Stay with {r.best.supplierName}</span>
+                        <span className="inline-flex items-center gap-1.5 font-medium text-ink"><Check />Stay with {r.best.supplierName}</span>
                         {r.ranked[1] && <span className="block text-xs text-muted">{usd(r.ranked[1].total - r.best.total)} less than {r.ranked[1].supplierName}</span>}
                       </>
                     )}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-medium tabular-nums text-ink">{usd(r.best.total)}</td>
-                  <td className="py-2.5 pr-3 text-right text-xs tabular-nums">
+                  <td className="py-4 pr-5 text-right font-medium tabular-nums text-ink">{usd(r.best.total)}</td>
+                  <td className="py-4 pr-5 text-right text-[0.8125rem] tabular-nums">
                     <VsLine diff={r.vsToday} label="" />
                   </td>
-                  <td className="py-2.5 text-xs text-copy">
+                  <td className="py-4 text-xs leading-5 text-copy">
                     {flip === null
                       ? 'No supplier outside ' + country + ' to compare'
                       : `Cheapest changes if ${country}'s tariff ${flip >= extraRateFor(scenarioRates, country) ? 'passes' : 'drops under'} ${pct(Math.max(0, flip))}`}
@@ -282,8 +282,8 @@ function ByItem({ advice, at }: { advice: Advice[]; at: string }) {
   const switching = rows.filter((row) => row.picks.some((p) => p.switched)).length
 
   return (
-    <Card title="Who to order each item from" className="mb-5">
-      <p className="-mt-2 mb-3 text-sm text-copy" aria-live="polite">
+    <Card title="Who to order each item from" className="mb-10">
+      <p className="-mt-3 mb-6 text-sm text-copy" aria-live="polite">
         {switching === 0
           ? `${at[0].toUpperCase()}${at.slice(1)}, keep buying every item from the same supplier as last time.`
           : `${at[0].toUpperCase()}${at.slice(1)}, ${switching} of ${rows.length} ${rows.length === 1 ? 'item is' : 'items are'} cheaper from a different supplier.`}
@@ -291,13 +291,13 @@ function ByItem({ advice, at }: { advice: Advice[]; at: string }) {
       <div className="overflow-x-auto">
         <table className="w-full whitespace-nowrap text-sm tabular-nums">
           <thead>
-            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-              <th scope="col" className="py-2 pr-3">Item</th>
-              <th scope="col" className="py-2 pr-3">Order from</th>
-              <th scope="col" className="py-2 pr-3 text-right">Landed / unit</th>
-              <th scope="col" className="py-2 pr-3 text-right">Tariffs / unit</th>
-              <th scope="col" className="py-2 pr-3 text-right">Vs last time</th>
-              <th scope="col" className="py-2 text-right">Units bought</th>
+            <tr className="border-b border-line-strong text-left text-[0.8125rem] text-muted [&>:first-child]:pl-3 [&>:last-child]:pr-3">
+              <th scope="col" className="py-3 pr-5">Item</th>
+              <th scope="col" className="py-3 pr-5">Order from</th>
+              <th scope="col" className="py-3 pr-5 text-right">Landed / unit</th>
+              <th scope="col" className="py-3 pr-5 text-right">Tariffs / unit</th>
+              <th scope="col" className="py-3 pr-5 text-right">Vs last time</th>
+              <th scope="col" className="py-3 text-right">Units bought</th>
             </tr>
           </thead>
           <tbody>
@@ -308,8 +308,8 @@ function ByItem({ advice, at }: { advice: Advice[]; at: string }) {
               const labels = [...new Set(row.picks.map((p) => p.label))]
               const switched = row.picks.some((p) => p.switched)
               return (
-                <tr key={row.key} className={`border-b border-line/60 align-top ${switched ? 'bg-accent-soft' : ''}`}>
-                  <td className="py-2 pr-3">
+                <tr key={row.key} className={`border-b border-line align-baseline [&>:first-child]:pl-3 [&>:last-child]:pr-3 ${switched ? 'bg-good-soft' : ''}`}>
+                  <td className="py-3.5 pr-5">
                     <span className="font-medium text-ink">{row.name}</span>
                     <span className="flex items-center gap-1.5 text-xs text-muted">
                       <span className="font-mono">{row.htsCode}</span>
@@ -320,25 +320,25 @@ function ByItem({ advice, at }: { advice: Advice[]; at: string }) {
                       </span>
                     </span>
                   </td>
-                  <td className="py-2 pr-3">
+                  <td className="py-3.5 pr-5">
                     <span className="font-semibold text-ink">{labels.join(', ') || 'No quote'}</span>
-                    <span className={`block text-xs ${switched ? 'font-medium text-accent-ink' : 'text-muted'}`}>
-                      {switched ? 'Switch from last time' : '✓ Same as last time'}
+                    <span className={`block text-xs ${switched ? 'font-medium text-good' : 'text-muted'}`}>
+                      {switched ? 'Switch from last time' : <span className="inline-flex items-center gap-1"><Check />Same as last time</span>}
                     </span>
                   </td>
-                  <td className="py-2 pr-3 text-right font-medium text-ink">{usd(next, true)}</td>
-                  <td className="py-2 pr-3 text-right text-muted">{usd(row.tariffNext / row.units, true)}</td>
-                  <td className={`py-2 pr-3 text-right text-xs ${Math.abs(diff) < 0.005 ? 'text-muted' : diff > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+                  <td className="py-3.5 pr-5 text-right font-medium text-ink">{usd(next, true)}</td>
+                  <td className="py-3.5 pr-5 text-right text-muted">{usd(row.tariffNext / row.units, true)}</td>
+                  <td className={`py-3.5 pr-5 text-right text-[0.8125rem] ${Math.abs(diff) < 0.005 ? 'text-muted' : diff > 0 ? 'text-bad' : 'text-good'}`}>
                     {Math.abs(diff) < 0.005 ? 'same' : `${diff > 0 ? '+' : '-'}${usd(Math.abs(diff), true)} (${pct(Math.abs(diff) / last, 1)})`}
                   </td>
-                  <td className="py-2 text-right">{num(row.units)}</td>
+                  <td className="py-3.5 text-right">{num(row.units)}</td>
                 </tr>
               )
             })}
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-muted">
+      <p className="mt-6 max-w-[78ch] text-xs leading-5 text-muted">
         Landed cost per unit includes the item's share of that supplier's freight and fees. Buying items from different suppliers means separate
         shipments, so check the order totals below before splitting an order.
       </p>
@@ -383,12 +383,12 @@ function OrderDeepDive({ p, scenarioRates, rateOf }: { p: Portfolio; scenarioRat
 
   return (
     <section aria-label="One order in depth">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-ink">One order in depth</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-section text-ink">One order in depth</h2>
         <label className="flex items-center gap-2 text-sm text-copy">
           Order
           <select
-            className="rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm text-ink"
+            className="rounded-lg border border-line-strong bg-surface py-2 pr-3 pl-3 text-sm text-ink transition-colors hover:border-faint"
             value={order.id}
             onChange={(e) => setPicked(e.target.value)}
           >
@@ -402,7 +402,7 @@ function OrderDeepDive({ p, scenarioRates, rateOf }: { p: Portfolio; scenarioRat
       </div>
 
       {flips.length > 0 && (
-        <p className="mb-3 text-sm text-copy">
+        <p className="mb-6 max-w-[78ch] text-sm leading-6 text-copy">
           <span className="font-medium text-ink">The cheapest supplier for this order changes if </span>
           {flips.map(({ c, flip }, i) => (
             <span key={c}>
@@ -414,13 +414,13 @@ function OrderDeepDive({ p, scenarioRates, rateOf }: { p: Portfolio; scenarioRat
         </p>
       )}
 
-      <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((r) => (
           <SupplierCard key={r.supplierId} r={r} delta={rateOf(r.country) - extraRateFor(rates, r.country)} />
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         <CashCard s={s} today={today} />
         <ProfitCard s={s} today={today} />
       </div>
@@ -434,20 +434,20 @@ function vsToday(now: number, today: number, moreIsGood: boolean, words: [more: 
   if (Math.round(Math.abs(diff)) === 0) return null
   const good = diff > 0 === moreIsGood
   return (
-    <p className={`text-xs font-medium ${good ? 'text-emerald-700' : 'text-red-700'}`}>
+    <p className={`text-xs font-medium ${good ? 'text-good' : 'text-bad'}`}>
       {usd(Math.abs(diff))} {diff > 0 ? words[0] : words[1]} than at today's tariffs
     </p>
   )
 }
 
 function Tag({ tone, children }: { tone: 'green' | 'blue'; children: ReactNode }) {
-  const style = tone === 'green' ? 'bg-emerald-600 text-white' : 'bg-ink-soft text-ink'
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>{children}</span>
+  const style = tone === 'green' ? 'bg-good text-white' : 'bg-ink-soft text-ink'
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style}`}>{children}</span>
 }
 
 function Row({ label, children, strong = false }: { label: string; children: ReactNode; strong?: boolean }) {
   return (
-    <div className={`flex justify-between gap-3 py-1 ${strong ? 'font-semibold text-ink' : ''}`}>
+    <div className={`flex justify-between gap-4 py-1.5 ${strong ? 'font-semibold text-ink' : ''}`}>
       <dt className="text-muted">{label}</dt>
       <dd className="tabular-nums">{children}</dd>
     </div>
@@ -460,13 +460,13 @@ function SupplierCard({ r, delta }: { r: RankedResult; delta: number }) {
   return (
     <section
       aria-label={supplierLabel(r)}
-      className={`rounded-lg border bg-surface p-4 shadow-sm ${cheapest ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-line'}`}
+      className={`rounded-card border bg-surface p-6 shadow-ui ${cheapest ? 'border-good ring-1 ring-good/60' : 'border-line'}`}
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-ink">{r.supplierName}</h3>
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <h3 className="font-serif text-lg font-semibold tracking-tight text-ink">{r.supplierName}</h3>
         <span className="text-sm text-muted">{r.country}</span>
       </div>
-      <div className="mb-3 flex min-h-6 flex-wrap gap-2">
+      <div className="mb-4 flex min-h-6 flex-wrap gap-2">
         {cheapest && <Tag tone="green">Cheapest</Tag>}
         {Math.abs(delta) > SAME && <Tag tone="blue">Tariff {signedPoints(delta)}</Tag>}
       </div>
@@ -477,7 +477,7 @@ function SupplierCard({ r, delta }: { r: RankedResult; delta: number }) {
         </Row>
         <Row label="Per unit">{usd(r.avgUnit, true)}</Row>
         <Row label="Vs cheapest">
-          {cheapest ? <span className="text-emerald-700">Cheapest</span> : <span className="text-red-700">{usd(r.gapToCheapest)} more</span>}
+          {cheapest ? <span className="text-good">Cheapest</span> : <span className="text-bad">{usd(r.gapToCheapest)} more</span>}
         </Row>
       </dl>
       <Details summary="See the cost breakdown">
@@ -504,11 +504,11 @@ function CashCard({ s, today }: { s: Scenario; today: Scenario }) {
   const lowWeek = c.weeks[c.lowestWeek]
   return (
     <Card title={`Cash, ordering this again from ${s.cheapest.supplierName}`}>
-      <div className="space-y-2 text-sm text-copy">
-        <p className="text-xs text-muted">As if this were your only order, starting from your {usd(s.inputs.business.cash)} cash on hand.</p>
+      <div className="space-y-3 text-sm leading-6 text-copy">
+        <p className="text-xs leading-5 text-muted">As if this were your only order, starting from your {usd(s.inputs.business.cash)} cash on hand.</p>
         {c.shortfall > 0 ? (
           <>
-            <p className="text-2xl font-bold tabular-nums text-red-700">{usd(c.shortfall)} below</p>
+            <p className="text-[1.75rem] leading-9 font-semibold tracking-tight tabular-nums text-bad">{usd(c.shortfall)} below</p>
             <p>
               your {usd(buffer)} safety buffer, for {c.weeksBelowBuffer} {c.weeksBelowBuffer === 1 ? 'week' : 'weeks'}.
             </p>
@@ -519,7 +519,7 @@ function CashCard({ s, today }: { s: Scenario; today: Scenario }) {
           </>
         ) : (
           <>
-            <p className="text-2xl font-bold tabular-nums text-emerald-700">{usd(c.headroom)} spare</p>
+            <p className="text-[1.75rem] leading-9 font-semibold tracking-tight tabular-nums text-good">{usd(c.headroom)} spare</p>
             <p>You stay above your {usd(buffer)} safety buffer the whole time.</p>
           </>
         )}
@@ -549,16 +549,16 @@ function CashDetails({ c, orderDate }: { c: CashResult; orderDate: string }) {
           </li>
         ))}
       </ul>
-      <div className="max-h-72 overflow-auto rounded border border-line bg-surface">
+      <div className="max-h-72 overflow-auto rounded-lg border border-line bg-surface">
         <table className="w-full text-xs tabular-nums">
           <caption className="sr-only">Cash balance at the end of each week</caption>
           <thead className="sticky top-0 bg-ink-soft text-left text-muted">
             <tr>
-              <th scope="col" className="px-2 py-1">Week</th>
-              <th scope="col" className="px-2 py-1">Starts</th>
-              <th scope="col" className="px-2 py-1 text-right">In</th>
-              <th scope="col" className="px-2 py-1 text-right">Out</th>
-              <th scope="col" className="px-2 py-1 text-right">Balance</th>
+              <th scope="col" className="px-3 py-1.5">Week</th>
+              <th scope="col" className="px-3 py-1.5">Starts</th>
+              <th scope="col" className="px-3 py-1.5 text-right">In</th>
+              <th scope="col" className="px-3 py-1.5 text-right">Out</th>
+              <th scope="col" className="px-3 py-1.5 text-right">Balance</th>
             </tr>
           </thead>
           <tbody>
@@ -566,11 +566,11 @@ function CashDetails({ c, orderDate }: { c: CashResult; orderDate: string }) {
               const lowest = w.week === c.lowestWeek
               return (
                 <tr key={w.week} className={lowest ? 'bg-accent-soft font-semibold' : 'border-t border-line/60'}>
-                  <td className="px-2 py-1">{w.week}</td>
-                  <td className="px-2 py-1">{shortDate(w.date)}</td>
-                  <td className="px-2 py-1 text-right">{w.inflow ? usd(w.inflow) : ''}</td>
-                  <td className="px-2 py-1 text-right">{w.outflow ? usd(w.outflow) : ''}</td>
-                  <td className="px-2 py-1 text-right">
+                  <td className="px-3 py-1.5">{w.week}</td>
+                  <td className="px-3 py-1.5">{shortDate(w.date)}</td>
+                  <td className="px-3 py-1.5 text-right">{w.inflow ? usd(w.inflow) : ''}</td>
+                  <td className="px-3 py-1.5 text-right">{w.outflow ? usd(w.outflow) : ''}</td>
+                  <td className="px-3 py-1.5 text-right">
                     {usd(w.balance)}
                     {lowest && <span className="ml-1 text-accent-ink">Lowest</span>}
                   </td>
@@ -588,8 +588,8 @@ function ProfitCard({ s, today }: { s: Scenario; today: Scenario }) {
   const m = s.margin
   return (
     <Card title={`Profit, ordering this again from ${s.cheapest.supplierName}`}>
-      <div className="space-y-2 text-sm text-copy">
-        <p className="text-2xl font-bold tabular-nums text-ink">
+      <div className="space-y-3 text-sm leading-6 text-copy">
+        <p className="text-[1.75rem] leading-9 font-semibold tracking-tight tabular-nums text-ink">
           {usd(m.margin)} <span className="text-base font-semibold text-muted">({pct(m.marginPct)} of sales)</span>
         </p>
         {vsToday(m.margin, today.margin.margin, true)}
@@ -602,21 +602,21 @@ function ProfitCard({ s, today }: { s: Scenario; today: Scenario }) {
             <caption className="sr-only">Sales by product</caption>
             <thead className="text-left text-muted">
               <tr>
-                <th scope="col" className="py-1 pr-2">Product</th>
-                <th scope="col" className="py-1 pr-2 text-right">Units</th>
-                <th scope="col" className="py-1 pr-2 text-right">Sell price</th>
-                <th scope="col" className="py-1 pr-2 text-right">Sold per week</th>
-                <th scope="col" className="py-1 text-right">Sales</th>
+                <th scope="col" className="py-1.5 pr-3">Product</th>
+                <th scope="col" className="py-1.5 pr-3 text-right">Units</th>
+                <th scope="col" className="py-1.5 pr-3 text-right">Sell price</th>
+                <th scope="col" className="py-1.5 pr-3 text-right">Sold per week</th>
+                <th scope="col" className="py-1.5 text-right">Sales</th>
               </tr>
             </thead>
             <tbody>
               {m.perProduct.map((p) => (
                 <tr key={p.productId} className="border-t border-line">
-                  <td className="py-1 pr-2">{p.name}</td>
-                  <td className="py-1 pr-2 text-right">{num(p.qty)}</td>
-                  <td className="py-1 pr-2 text-right">{usd(p.sellPrice, true)}</td>
-                  <td className="py-1 pr-2 text-right">{num(p.salesPerWeek)}</td>
-                  <td className="py-1 text-right">{usd(p.revenue)}</td>
+                  <td className="py-1.5 pr-3">{p.name}</td>
+                  <td className="py-1.5 pr-3 text-right">{num(p.qty)}</td>
+                  <td className="py-1.5 pr-3 text-right">{usd(p.sellPrice, true)}</td>
+                  <td className="py-1.5 pr-3 text-right">{num(p.salesPerWeek)}</td>
+                  <td className="py-1.5 text-right">{usd(p.revenue)}</td>
                 </tr>
               ))}
             </tbody>

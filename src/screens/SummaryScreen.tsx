@@ -31,11 +31,11 @@ export default function SummaryScreen() {
         {chosen && cash && (
           <>
             <AiExplanation />
-            <div className="mb-5 grid gap-5 md:grid-cols-2">
+            <div className="mb-8 grid gap-8 md:grid-cols-2">
               <Card title="This order">
-                <p className="mb-3 text-sm text-copy">{supplierSentence(ranked)}</p>
+                <p className="mb-4 text-sm leading-6 text-copy">{supplierSentence(ranked)}</p>
                 {chosen.rank !== 1 && (
-                  <p className="mb-3 text-sm text-copy">
+                  <p className="mb-4 text-sm leading-6 text-copy">
                     You picked {chosen.supplierName} ({chosen.country}) at {usd(chosen.total, true)}, {usd(chosen.gapToCheapest, true)} more than the cheapest.
                   </p>
                 )}
@@ -54,8 +54,8 @@ export default function SummaryScreen() {
               </Card>
             </div>
 
-            <Card title="Order at a glance" className="mb-5">
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm md:grid-cols-4">
+            <Card title="Order at a glance" className="mb-8">
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-6 text-sm md:grid-cols-4">
                 <Item label="Supplier" info="supplierName" value={`${chosen.supplierName} (${chosen.country})`} />
                 <Item label="Units" info="units" value={chosen.units.toLocaleString()} />
                 <Item label="Landed total" info="landedTotal" value={usd(chosen.total, true)} />
@@ -67,15 +67,15 @@ export default function SummaryScreen() {
               </dl>
             </Card>
 
-            <Card title="Rates used, with sources and dates" className="mb-5">
+            <Card title="Rates used, with sources and dates" className="mb-8">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>
-                    <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
-                      <th className="py-2 pr-3">Rate</th>
-                      <th className="py-2 pr-3 text-right">Value</th>
-                      <th className="py-2 pr-3">Source</th>
-                      <th className="py-2">As of</th>
+                    <tr className="border-b border-line-strong text-left text-[0.8125rem] text-muted">
+                      <th className="py-3 pr-5">Rate</th>
+                      <th className="py-3 pr-5 text-right">Value</th>
+                      <th className="py-3 pr-5">Source</th>
+                      <th className="py-3">As of</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -108,15 +108,15 @@ export default function SummaryScreen() {
               </div>
             </Card>
 
-            <Card title="Assumptions" className="mb-5">
-              <ul className="list-disc space-y-1 pl-5 text-sm text-copy">
+            <Card title="Assumptions" className="mb-8">
+              <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-copy marker:text-faint">
                 {ASSUMPTIONS.map((a) => (
                   <li key={a}>{a}</li>
                 ))}
               </ul>
             </Card>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-line-strong bg-surface p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-line-strong bg-surface px-7 py-5">
               <p className="font-semibold text-ink">{DISCLAIMER}</p>
               <Button variant="secondary" className="no-print" onClick={() => window.print()}>
                 Print
@@ -132,30 +132,30 @@ export default function SummaryScreen() {
 function Item({ label, value, info }: { label: string; value: string; info?: GlossaryKey }) {
   return (
     <div>
-      <dt className="flex items-center text-xs uppercase tracking-wide text-muted">
+      <dt className="flex items-center text-xs text-muted">
         {label}
         {info && <Info term={info} />}
       </dt>
-      <dd className="font-semibold tabular-nums text-ink">{value}</dd>
+      <dd className="mt-0.5 font-semibold tabular-nums text-ink">{value}</dd>
     </div>
   )
 }
 
 function Row({ name, value, source, url, date }: { name: string; value: string; source: string; url?: string; date: string }) {
   return (
-    <tr className="border-b border-line/60 align-top">
-      <td className="py-2 pr-3">{name}</td>
-      <td className="py-2 pr-3 text-right tabular-nums">{value}</td>
-      <td className="py-2 pr-3 text-muted">
+    <tr className="border-b border-line align-baseline">
+      <td className="py-3.5 pr-5">{name}</td>
+      <td className="py-3.5 pr-5 text-right tabular-nums">{value}</td>
+      <td className="py-3.5 pr-5 text-muted">
         {url ? (
-          <a href={url} target="_blank" rel="noreferrer" className="text-ink underline">
+          <a href={url} target="_blank" rel="noreferrer" className="text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink">
             {source}
           </a>
         ) : (
           source
         )}
       </td>
-      <td className="py-2 whitespace-nowrap text-muted">{niceDate(date)}</td>
+      <td className="py-3.5 whitespace-nowrap text-muted">{niceDate(date)}</td>
     </tr>
   )
 }

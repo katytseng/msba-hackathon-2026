@@ -55,8 +55,8 @@ export function AiExplanation() {
 
   return (
     <div
-      className={`mb-5 rounded-xl p-[2px] shadow-sm transition-colors duration-300 motion-reduce:transition-none ${
-        isAi ? 'bg-gradient-to-r from-ink via-ink to-accent' : 'bg-line'
+      className={`mb-8 rounded-[1.0625rem] p-px shadow-ui transition-colors duration-300 motion-reduce:transition-none ${
+        isAi ? 'bg-line-strong' : 'bg-line'
       }`}
     >
     <Card
@@ -64,13 +64,16 @@ export function AiExplanation() {
         <span className="flex items-center gap-2">
           Our Recommendation
           {isAi && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-ink via-ink to-accent px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white">
-              <span aria-hidden>✦</span> AI
+            <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-0.5 font-sans text-xs font-semibold text-white">
+              <svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10" fill="currentColor">
+                <path d="M8 1.2 9.6 6.4 14.8 8 9.6 9.6 8 14.8 6.4 9.6 1.2 8 6.4 6.4Z" />
+              </svg>
+              AI
             </span>
           )}
         </span>
       }
-      className="rounded-[10px] border-0! shadow-none!"
+      className="rounded-[1rem] border-0! shadow-none!"
       actions={
         <Button variant={result ? 'secondary' : 'primary'} onClick={run}>
           {current?.status === 'loading' ? 'Writing…' : result ? 'Ask again' : EXPLAIN_URL ? 'Explain with AI' : 'Show summary'}
@@ -86,18 +89,18 @@ export function AiExplanation() {
       )}
 
       {current?.status === 'loading' && (
-        <div className="space-y-2" aria-live="polite" aria-busy="true">
+        <div className="space-y-3" aria-live="polite" aria-busy="true">
           <p className="text-sm text-muted">Writing a plain-English explanation (up to 5 seconds)…</p>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-3 animate-pulse rounded bg-ink-soft motion-reduce:animate-none" style={{ width: `${90 - i * 15}%` }} />
+            <div key={i} className="h-3 animate-pulse rounded-full bg-ink-soft motion-reduce:animate-none" style={{ width: `${90 - i * 15}%` }} />
           ))}
         </div>
       )}
 
       {result && shown && (
         <div aria-live="polite">
-          {shown.headline && <p className="mb-3 text-base font-semibold text-ink">{shown.headline}</p>}
-          <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[8rem_1fr]">
+          {shown.headline && <p className="mb-5 max-w-[60ch] font-serif text-[1.375rem] leading-8 font-semibold tracking-tight text-ink">{shown.headline}</p>}
+          <dl className="grid gap-x-6 gap-y-4 text-sm leading-6 sm:grid-cols-[8rem_1fr]">
             {ROWS.map((r) => (
               <div key={r.key} className="contents">
                 <dt className="font-medium text-muted">{r.label}</dt>
@@ -105,8 +108,8 @@ export function AiExplanation() {
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-xs text-muted">{shown.caveat}</p>
-          <p className="mt-3 border-t border-line/60 pt-2 text-xs text-muted">
+          <p className="mt-5 text-xs leading-5 text-muted">{shown.caveat}</p>
+          <p className="mt-5 border-t border-line pt-4 text-xs leading-5 text-muted">
             {result.source === 'ai'
               ? 'Written by AI from the numbers on this page. Every dollar amount and percentage was checked against the calculation.'
               : FALLBACK_NOTE[result.reason]}

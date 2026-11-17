@@ -37,7 +37,7 @@ function vsToday(now: number, today: number, moreIsGood: boolean, words: [more: 
   if (Math.round(Math.abs(diff)) === 0) return null
   const good = diff > 0 === moreIsGood
   return (
-    <p className={`text-xs font-medium ${good ? 'text-emerald-700' : 'text-red-700'}`}>
+    <p className={`text-xs font-medium ${good ? 'text-good' : 'text-bad'}`}>
       {usd(Math.abs(diff))} {diff > 0 ? words[0] : words[1]} than today
     </p>
   )
@@ -171,7 +171,7 @@ export default function TariffScreen() {
 }
 
 function Tag({ tone, children }: { tone: 'green' | 'blue'; children: ReactNode }) {
-  const style = tone === 'green' ? 'bg-emerald-600 text-white' : 'bg-ink-soft text-ink'
+  const style = tone === 'green' ? 'bg-good text-white' : 'bg-ink-soft text-ink'
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>{children}</span>
 }
 
@@ -190,7 +190,7 @@ function SupplierCard({ r, moving, delta }: { r: RankedResult; moving: boolean; 
   return (
     <section
       aria-label={name(r)}
-      className={`rounded-lg border bg-surface p-4 shadow-sm ${cheapest ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-line'}`}
+      className={`rounded-xl border bg-surface p-5 shadow-ui ${cheapest ? 'border-good ring-1 ring-good' : 'border-line'}`}
     >
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <h3 className="font-semibold text-ink">{r.supplierName}</h3>
@@ -207,7 +207,7 @@ function SupplierCard({ r, moving, delta }: { r: RankedResult; moving: boolean; 
         </Row>
         <Row label="Per unit">{usd(r.avgUnit, true)}</Row>
         <Row label="Vs cheapest">
-          {cheapest ? <span className="text-emerald-700">Cheapest</span> : <span className="text-red-700">{usd(r.gapToCheapest)} more</span>}
+          {cheapest ? <span className="text-good">Cheapest</span> : <span className="text-bad">{usd(r.gapToCheapest)} more</span>}
         </Row>
       </dl>
       <Details summary="See the cost breakdown">
@@ -236,7 +236,7 @@ function CashCard({ s, today, buffer, orderDate }: { s: TariffScenario; today: T
       <div className="space-y-2 text-sm text-copy">
         {c.shortfall > 0 ? (
           <>
-            <p className="text-2xl font-bold tabular-nums text-red-700">{usd(c.shortfall)} below</p>
+            <p className="text-2xl font-bold tabular-nums text-bad">{usd(c.shortfall)} below</p>
             <p>
               your {usd(buffer)} safety buffer, for {c.weeksBelowBuffer} {c.weeksBelowBuffer === 1 ? 'week' : 'weeks'}.
             </p>
@@ -247,7 +247,7 @@ function CashCard({ s, today, buffer, orderDate }: { s: TariffScenario; today: T
           </>
         ) : (
           <>
-            <p className="text-2xl font-bold tabular-nums text-emerald-700">{usd(c.headroom)} spare</p>
+            <p className="text-2xl font-bold tabular-nums text-good">{usd(c.headroom)} spare</p>
             <p>You stay above your {usd(buffer)} safety buffer the whole time.</p>
           </>
         )}

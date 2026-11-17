@@ -16,6 +16,7 @@ import { niceDate, shortDate, usd } from '../format'
 import { useApp } from '../state'
 import { thisOrderSentences } from '../summaries'
 import { Callout, Card, Info, NeedsData, PageHeader, Segmented, usePrefersReducedMotion } from '../components/ui'
+import { Stat as SharedStat } from './dashboard/shared'
 import type { GlossaryKey } from '../glossary'
 
 const EVENT_TERMS: Record<string, GlossaryKey> = {
@@ -26,7 +27,7 @@ const EVENT_TERMS: Record<string, GlossaryKey> = {
 }
 
 const LINE = '#14284b' // --color-ink
-const BUFFER = '#5b6678' // --color-muted
+const BUFFER = '#686257' // --color-muted
 const DIP = '#f28c0a' // --color-accent
 
 /** A round tick step (1, 2, 2.5 or 5 times a power of ten) near the raw step. */
@@ -60,7 +61,7 @@ function WeekTooltip({ active, payload }: { active?: boolean; payload?: { payloa
   if (!active || !payload?.length) return null
   const w = payload[0].payload
   return (
-    <div className="rounded-md border border-line bg-surface p-3 text-xs shadow-md">
+    <div className="rounded-xl border border-line bg-surface px-3.5 py-3 text-xs leading-5 shadow-pop">
       <p className="font-semibold text-ink">
         Week {w.week} · {shortDate(w.date)}
       </p>
@@ -113,7 +114,7 @@ export default function CashScreen() {
       <NeedsData>
         {chosen && cash && (
           <>
-            <div className="mb-5">
+            <div className="mb-8">
               <Callout tone={cash.shortfall > 0 ? 'warn' : 'good'}>
                 {thisOrderSentences(inputs, chosen, cash).map((s) => (
                   <p key={s}>{s}</p>
@@ -121,7 +122,7 @@ export default function CashScreen() {
               </Callout>
             </div>
 
-            <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="mb-12 grid grid-cols-2 gap-x-8 gap-y-8 md:grid-cols-4 lg:gap-x-10">
               <Stat label="Lowest balance" info="lowestBalance" value={usd(cash.lowest)} sub={`Week ${cash.lowestWeek}`} />
               <Stat
                 label={cash.shortfall > 0 ? 'Below buffer by' : 'Headroom'}
@@ -140,7 +141,7 @@ export default function CashScreen() {
 
             <Card
               title={`Cash balance by week: ${chosen.supplierName} (${chosen.country})`}
-              className="mb-5"
+              className="mb-8"
               actions={
                 <>
                   {canZoom && (
@@ -175,10 +176,10 @@ export default function CashScreen() {
                 </>
               }
             >
-              <div className="h-80 w-full">
+              <div className="h-[22rem] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={shownWeeks} margin={{ top: 24, right: 24, bottom: 8, left: 8 }}>
-                    <CartesianGrid stroke="#eceae4" vertical={false} />
+                    <CartesianGrid stroke="#ece6d8" vertical={false} />
                     {cash.shortfall > 0 && (
                       <ReferenceArea
                         x1={cash.weeks.find((w) => w.balance < inputs.business.buffer)?.week}
@@ -192,32 +193,32 @@ export default function CashScreen() {
                       dataKey="week"
                       tickFormatter={xTick}
                       minTickGap={xUnit === 'dates' ? 20 : 5}
-                      tick={{ fontSize: 12, fill: '#5b6678' }}
+                      tick={{ fontSize: 12, fill: '#686257' }}
                       tickLine={false}
-                      axisLine={{ stroke: '#cfd6e0' }}
+                      axisLine={{ stroke: '#d9d0bd' }}
                     />
                     <YAxis
                       domain={yDomain}
                       ticks={yTicks}
                       allowDataOverflow={!!yDomain}
                       tickFormatter={(v: number) => kUsd(v, yStep)}
-                      tick={{ fontSize: 12, fill: '#5b6678' }}
+                      tick={{ fontSize: 12, fill: '#686257' }}
                       tickLine={false}
                       axisLine={false}
                       width={56}
                     />
-                    <Tooltip content={<WeekTooltip />} cursor={{ stroke: '#94a3b8', strokeWidth: 1 }} />
+                    <Tooltip content={<WeekTooltip />} cursor={{ stroke: '#a8a090', strokeWidth: 1 }} />
                     <ReferenceLine
                       y={buffer}
                       ifOverflow="hidden"
                       stroke={BUFFER}
                       strokeDasharray="6 4"
-                      label={{ value: `Safety buffer ${usd(inputs.business.buffer)}`, position: 'insideTopRight', fontSize: 12, fill: '#334155' }}
+                      label={{ value: `Safety buffer ${usd(inputs.business.buffer)}`, position: 'insideTopRight', fontSize: 12, fill: '#38405a' }}
                     />
                     <ReferenceLine
                       x={cash.salesStartWeek}
-                      stroke="#cfd6e0"
-                      label={{ value: 'Sales start', position: 'top', fontSize: 11, fill: '#5b6678' }}
+                      stroke="#d9d0bd"
+                      label={{ value: 'Sales start', position: 'top', fontSize: 11, fill: '#686257' }}
                     />
                     <Line type="linear" dataKey="balance" stroke={LINE} strokeWidth={2} dot={false} activeDot={{ r: 5 }} isAnimationActive={!reducedMotion}
                       animationDuration={250}
@@ -228,14 +229,14 @@ export default function CashScreen() {
                       y={cash.lowest}
                       r={6}
                       fill={DIP}
-                      stroke="#fff"
+                      stroke="#fffdf8"
                       strokeWidth={2}
-                      label={{ value: `Lowest ${usd(cash.lowest)}`, position: 'right', dy: -14, fontSize: 12, fill: '#9a5200', fontWeight: 600 }}
+                      label={{ value: `Lowest ${usd(cash.lowest)}`, position: 'right', dy: -14, fontSize: 12, fill: '#94500a', fontWeight: 600 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs leading-5 text-muted">
                 <span>
                   {cash.shortfall > 0 ? 'Shaded weeks are below your safety buffer. ' : ''}
                   Sales start the first full week after arrival<Info term="salesStart" />. 
@@ -248,23 +249,23 @@ export default function CashScreen() {
             <Card title="Payments for this order">
               <table className="w-full text-sm tabular-nums">
                 <thead>
-                  <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                    <th className="py-2 text-left">When</th>
-                    <th className="py-2 text-left">What</th>
-                    <th className="py-2 text-right">Amount</th>
+                  <tr className="border-b border-line-strong text-[0.8125rem] text-muted">
+                    <th className="py-3 text-left">When</th>
+                    <th className="py-3 text-left">What</th>
+                    <th className="py-3 text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {cash.events.map((e) => (
-                    <tr key={e.label} className="border-b border-line/60">
-                      <td className="py-2">
+                    <tr key={e.label} className="border-b border-line">
+                      <td className="py-3.5">
                         Day {e.day} <span className="text-muted">({niceDate(addDays(inputs.business.orderDate, e.day))}, week {Math.floor(e.day / 7)})</span>
                       </td>
-                      <td className="py-2">
+                      <td className="py-3.5">
                         {e.label}
                         {EVENT_TERMS[e.label] && <Info term={EVENT_TERMS[e.label]} />}
                       </td>
-                      <td className="py-2 text-right">{usd(-e.amount, true)}</td>
+                      <td className="py-3.5 text-right">{usd(-e.amount, true)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -279,13 +280,15 @@ export default function CashScreen() {
 
 function Stat({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: GlossaryKey }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
-      <p className="flex items-center text-xs font-medium uppercase tracking-wide text-muted">
-        {label}
-        {info && <Info term={info} />}
-      </p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-ink">{value}</p>
-      {sub && <p className="text-xs text-muted">{sub}</p>}
-    </div>
+    <SharedStat
+      label={
+        <>
+          {label}
+          {info && <Info term={info} />}
+        </>
+      }
+      value={value}
+      sub={sub}
+    />
   )
 }

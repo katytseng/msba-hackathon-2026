@@ -21,13 +21,12 @@ export default function DashboardScreen({ tab }: { tab: DashTab }) {
 
   return (
     <div>
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Dashboard</p>
-        <h1 className="text-2xl font-bold text-ink">Your orders and cash</h1>
-        <p className="mt-1 text-muted">{current.intro}</p>
+      <div className="mb-8">
+        <h1 className="text-title text-ink">Your orders and cash</h1>
+        <p className="mt-2 max-w-[60ch] text-[1.0625rem] leading-7 text-muted">{current.intro}</p>
       </div>
 
-      <nav aria-label="Dashboard" className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
+      <nav aria-label="Dashboard" className="mb-10 flex gap-8 overflow-x-auto border-b border-line">
         {DASH_TABS.map((t) => {
           const active = t.key === tab
           return (
@@ -35,8 +34,8 @@ export default function DashboardScreen({ tab }: { tab: DashTab }) {
               key={t.key}
               to={t.path}
               aria-current={active ? 'page' : undefined}
-              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
-                active ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink'
+              className={`-mb-px whitespace-nowrap border-b-2 pb-3 text-[0.9375rem] transition-colors ${
+                active ? 'border-ink font-semibold text-ink' : 'border-transparent font-medium text-muted hover:border-line-strong hover:text-ink'
               }`}
             >
               {t.label}

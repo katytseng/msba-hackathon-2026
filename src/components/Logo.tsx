@@ -27,7 +27,7 @@ export function Logo({ size = 40, tagline = false }: { size?: number; tagline?: 
     <span className="flex items-center gap-3">
       <LogoMark size={size} className="shrink-0" />
       <span className="flex flex-col">
-        <span className="text-xl leading-tight font-extrabold tracking-tight text-ink">Landfall</span>
+        <span className="font-serif text-2xl leading-tight font-semibold tracking-tight text-ink">Landfall</span>
         {tagline && <span className="text-small text-muted">{TAGLINE}</span>}
       </span>
     </span>
