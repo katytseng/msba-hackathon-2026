@@ -96,6 +96,19 @@
     outline-offset: 2px;
     border-radius: 0.25rem;
   }
+  /* Controls are not text: a fast double click on a button, toggle, tab or disclosure never selects its label.
+     Inputs, table data and prose stay selectable. */
+  button,
+  summary,
+  [role="tab"],
+  [role="radiogroup"] label,
+  label:has(> input[type="radio"]),
+  label:has(> input[type="checkbox"]),
+  nav a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
   ::selection {
     background: var(--color-accent-line);
     color: var(--color-ink);
