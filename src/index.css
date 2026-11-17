@@ -21,6 +21,7 @@
   --color-accent-line: #efd3a3;
   --color-copy: #38405a;         /* body text, navy-tinted charcoal */
   --color-muted: #686257;        /* secondary text, warm gray (4.5:1+ on page, surface and sand) */
+  --color-quiet: #726c61;        /* fine print: lighter than muted, still 4.5:1 on the page */
   --color-faint: #a8a090;        /* decorative only, never for text */
   --color-line: #e8e1d3;         /* hairlines on the warm page */
   --color-line-strong: #cbc1ac;  /* input borders */
@@ -207,7 +208,12 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--color-faint); background-clip: content-box; }
 
+/* The printed report lives beside #root: hidden on screen, the only thing printed on paper (US letter). */
+#print-report { display: none; }
+@page { size: letter; margin: 0.6in; }
 @media print {
-  header, nav, .no-print { display: none !important; }
-  body { background: white; }
+  body > *:not(#print-report) { display: none !important; }
+  #print-report { display: block; }
+  html, body { background: white; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

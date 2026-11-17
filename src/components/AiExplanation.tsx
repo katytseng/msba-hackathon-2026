@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { buildExplainPayload } from '../ai/payload'
 import { explain, EXPLAIN_URL, type Explanation, type ExplainResult } from '../ai/explain'
 import { templateExplanation } from '../ai/fallback'
 import { rates, useApp } from '../state'
 import { Button, Card } from './ui'
+import type { ShownRecommendation } from './PrintReport'
 
 const ROWS: { key: Exclude<keyof Explanation, 'headline' | 'caveat'>; label: string }[] = [
   { key: 'supplier_choice', label: 'Supplier' },
@@ -23,7 +24,7 @@ const FALLBACK_NOTE: Record<Extract<ExplainResult, { source: 'fallback' }>['reas
  * Plain-English explanation of the results. The AI only rewords engine numbers; every $ and % it writes
  * is checked against the calculation, and any failure shows the template summary instead.
  */
-export function AiExplanation() {
+export function AiExplanation({ onShown }: { onShown?: (r: ShownRecommendation | null) => void } = {}) {
   const { inputs, ranked, chosen, cash, be } = useApp()
   const payload = useMemo(
     () => (chosen && cash ? buildExplainPayload(inputs, ranked, chosen, cash, be, rates) : null),
@@ -33,6 +34,19 @@ export function AiExplanation() {
   // Remember which scenario the answer belongs to, so editing inputs resets the card.
   const [state, setState] = useState<{ key: string; status: 'loading' } | { key: string; status: 'done'; result: ExplainResult } | null>(null)
   const current = state?.key === key ? state : null
+
+  // Tell the page what is on screen (AI text or the standard summary) so the printed report matches it.
+  const done = current?.status === 'done' ? current.result : null
+  useEffect(() => {
+    if (!onShown) return
+    if (!done || !chosen || !cash) return onShown(null)
+    onShown(
+      done.source === 'ai'
+        ? { explanation: done.explanation, ai: true }
+        : { explanation: templateExplanation(inputs, ranked, chosen, cash, be, rates.lastReviewed), ai: false },
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done])
 
   if (!payload || !chosen || !cash) return null
 

@@ -5,12 +5,27 @@ import { useApp } from '../state'
 import { glossary, type GlossaryKey } from '../glossary'
 
 /**
- * ⓘ button that shows a plain-English definition from glossary.ts.
- * Hover to peek (hides when the cursor leaves); click to pin (stays until you click elsewhere or press Esc).
- * The popover renders in a portal with fixed position so table scroll areas can't clip it.
+ * Button that opens a small bubble: hover to peek (hides when the cursor leaves), click to pin
+ * (stays until you click elsewhere or press Esc). The bubble renders in a portal with fixed position
+ * so table scroll areas can't clip it. Used by Info (glossary definitions) and the footer credit.
  */
-export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean }) {
-  const entry = glossary[term]
+export function Bubble({
+  label,
+  trigger,
+  className,
+  width = 272,
+  placement = 'below',
+  children,
+}: {
+  /** Accessible name of the trigger button. */
+  label: string
+  trigger: ReactNode
+  /** Trigger classes; receives whether the bubble is pinned open. */
+  className: (pinned: boolean) => string
+  width?: number
+  placement?: 'below' | 'above'
+  children: ReactNode
+}) {
   const [mode, setMode] = useState<'hover' | 'pinned' | null>(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
   const btn = useRef<HTMLButtonElement>(null)
@@ -18,17 +33,16 @@ export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean
   const hideTimer = useRef<number | undefined>(undefined)
   const id = useId()
   const open = mode !== null
-  const WIDTH = 272
 
   const place = () => {
     const r = btn.current?.getBoundingClientRect()
     if (!r) return
-    const left = Math.min(Math.max(8, r.left + r.width / 2 - WIDTH / 2), window.innerWidth - WIDTH - 8)
-    setPos({ top: r.bottom + 6, left })
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - width / 2), window.innerWidth - width - 8)
+    setPos({ top: placement === 'above' ? r.top - 8 : r.bottom + 6, left })
   }
   const cancelHide = () => window.clearTimeout(hideTimer.current)
 
-  // Hover: show now, hide shortly after the cursor leaves (the grace period lets you move onto the popover).
+  // Hover: show now, hide shortly after the cursor leaves (the grace period lets you move onto the bubble).
   const peek = () => {
     cancelHide()
     if (mode === null) {
@@ -73,6 +87,7 @@ export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean
       window.removeEventListener('scroll', place, true)
       window.removeEventListener('resize', place)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   useEffect(() => cancelHide, [])
@@ -85,18 +100,12 @@ export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean
         onClick={onClick}
         onMouseEnter={peek}
         onMouseLeave={unpeek}
-        aria-label={`What is ${entry.term}?`}
+        aria-label={label}
         aria-expanded={open}
         aria-controls={open ? id : undefined}
-        className={`${lead ? 'mr-1' : 'ml-1'} inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] leading-none normal-case transition-colors ${
-          mode === 'pinned' ? 'text-ink' : 'text-muted hover:text-ink'
-        } focus-visible:outline-2 focus-visible:outline-ink`}
+        className={className(mode === 'pinned')}
       >
-        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
-          <circle cx="8" cy="8" r="6.4" />
-          <path d="M8 7.2v3.6" />
-          <circle cx="8" cy="4.9" r="0.5" fill="currentColor" stroke="none" />
-        </svg>
+        {trigger}
       </button>
       {open &&
         createPortal(
@@ -106,15 +115,39 @@ export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean
             role="note"
             onMouseEnter={cancelHide}
             onMouseLeave={() => mode === 'hover' && unpeek()}
-            style={{ top: pos.top, left: pos.left, width: WIDTH }}
-            className="fixed z-50 rounded-xl border border-line bg-surface p-4 text-left text-xs font-normal normal-case tracking-normal text-copy shadow-pop"
+            style={{ top: pos.top, left: pos.left, width, transform: placement === 'above' ? 'translateY(-100%)' : undefined }}
+            className="no-print fixed z-50 rounded-xl border border-line bg-surface p-4 text-left text-xs font-normal normal-case tracking-normal text-copy shadow-pop"
           >
-            <p className="mb-1.5 text-sm font-semibold text-ink">{entry.term}</p>
-            <p className="leading-relaxed">{entry.definition}</p>
+            {children}
           </div>,
           document.body,
         )}
     </>
+  )
+}
+
+/** ⓘ button that shows a plain-English definition from glossary.ts. */
+export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean }) {
+  const entry = glossary[term]
+  return (
+    <Bubble
+      label={`What is ${entry.term}?`}
+      className={(pinned) =>
+        `${lead ? 'mr-1' : 'ml-1'} inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] leading-none normal-case transition-colors ${
+          pinned ? 'text-ink' : 'text-muted hover:text-ink'
+        } focus-visible:outline-2 focus-visible:outline-ink`
+      }
+      trigger={
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.4" />
+          <path d="M8 7.2v3.6" />
+          <circle cx="8" cy="4.9" r="0.5" fill="currentColor" stroke="none" />
+        </svg>
+      }
+    >
+      <p className="mb-1.5 text-sm font-semibold text-ink">{entry.term}</p>
+      <p className="leading-relaxed">{entry.definition}</p>
+    </Bubble>
   )
 }
 
