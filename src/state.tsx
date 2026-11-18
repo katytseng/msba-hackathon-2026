@@ -14,6 +14,7 @@ import ratesJson from './data/rates.json'
 import type { Company, SavedOrder } from './engine/portfolio'
 import sampleJson from './data/sample.json'
 import suppliersJson from './data/suppliers.json'
+import { DEMO_COMPANY, DEMO_ORDER_DATE, DEMO_TODAY, seedOrders } from './demo/data'
 
 export const rates = ratesJson as unknown as Rates
 const sample = { ...sampleJson, suppliers: suppliersJson } as Inputs
@@ -48,20 +49,38 @@ function saveDraft(inputs: Inputs) {
 }
 
 const ORDERS_KEY = 'landed-cost:orders:v1'
+const HTS_RECENT_KEY = 'landed-cost:hts-recent:v1' // written by hts/load.ts
 
 interface OrderStore {
   company: Company | null
   orders: SavedOrder[]
 }
 
+/** The demo's starting point: Sam's three existing orders and his bank balance. Dates follow DEMO_TODAY. */
+export const seedStore = (): OrderStore => ({ company: { ...DEMO_COMPANY }, orders: seedOrders() })
+
 function loadOrders(): OrderStore {
   try {
-    const d = JSON.parse(localStorage.getItem(ORDERS_KEY) ?? 'null')
+    const raw = localStorage.getItem(ORDERS_KEY)
+    // Nothing saved yet (first visit, or after a reset): start from the demo seed.
+    if (raw === null) return seedStore()
+    const d = JSON.parse(raw)
     if (d && Array.isArray(d.orders)) return { company: d.company ?? null, orders: d.orders }
   } catch {
     // ignore broken storage
   }
   return { company: null, orders: [] }
+}
+
+/** Wipe everything the app stored and reload, so the next load is exactly the seed state again. */
+export function resetDemo() {
+  try {
+    for (const k of [ORDERS_KEY, DRAFT_KEY, HTS_RECENT_KEY]) localStorage.removeItem(k)
+  } catch {
+    // storage blocked: the reload below still gives a clean in-memory start
+  }
+  window.location.hash = '#/dashboard'
+  window.location.reload()
 }
 
 function saveOrders(store: OrderStore) {
@@ -80,9 +99,10 @@ function freeColor(orders: SavedOrder[]): number {
   return i
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+// "Today" is the demo day, not the real clock, so every seeded date lines up (see demo/data.ts).
+const today = () => DEMO_TODAY
 export const emptyInputs = (): Inputs => ({
-  business: { cash: 0, buffer: 0, apr: DEFAULT_APR, orderDate: today() },
+  business: { cash: DEMO_COMPANY.cash, buffer: DEMO_COMPANY.buffer, apr: DEMO_COMPANY.apr, orderDate: DEMO_ORDER_DATE },
   products: [],
   suppliers: [],
 })
@@ -90,10 +110,9 @@ export const emptyInputs = (): Inputs => ({
 interface AppState {
   inputs: Inputs
   setInputs: (fn: (prev: Inputs) => Inputs) => void
-  resetToSample: () => void
   reset: () => void
   selectedId: string | null
-  setSelectedId: (id: string) => void
+  setSelectedId: (id: string | null) => void
   ranked: RankedResult[]
   chosen: RankedResult | null
   cash: CashResult | null
@@ -124,7 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => saveOrders(store), [store])
 
   // Cash, buffer and APR belong to the company (set on the dashboard's Finances tab), not to one order.
-  // Until the company is set, they fall back to the draft's values (e.g. from Load sample).
+  // Until the company is set, they fall back to the draft's values (e.g. a draft restored from storage).
   const company: Company = store.company ?? { cash: rawInputs.business.cash, buffer: rawInputs.business.buffer, apr: rawInputs.business.apr }
   const inputs = useMemo<Inputs>(
     () => ({ ...rawInputs, business: { ...rawInputs.business, cash: company.cash, buffer: company.buffer, apr: company.apr } }),
@@ -146,11 +165,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value: AppState = {
     inputs,
     setInputs: (fn) => setInputsRaw((prev) => fn({ ...prev, business: { ...prev.business, cash: company.cash, buffer: company.buffer, apr: company.apr } })),
-    resetToSample: () => {
-      setInputsRaw(structuredClone(sample))
-      setSelectedId(null)
-      setEditingId(null)
-    },
     reset: () => {
       setInputsRaw(emptyInputs())
       setSelectedId(null)
@@ -216,8 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
     },
     startNewOrder: () => {
-      // Keep the business and supplier list as a starting point; new order date is today.
-      setInputsRaw((prev) => ({ ...structuredClone(prev), business: { ...prev.business, orderDate: today() } }))
+      // Keep the business and supplier list as a starting point. The new order is placed the day after the demo day.
+      setInputsRaw((prev) => ({ ...structuredClone(prev), business: { ...prev.business, orderDate: DEMO_ORDER_DATE } }))
       setSelectedId(null)
       setEditingId(null)
     },

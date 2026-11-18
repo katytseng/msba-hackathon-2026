@@ -1,12 +1,32 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AppProvider } from './state'
+import { AppProvider, resetDemo } from './state'
 import DashboardScreen, { DASH_TABS, type DashTab } from './screens/DashboardScreen'
 import OrderModal, { ORDER_STEPS } from './components/OrderModal'
 import { LogoMark } from './components/Logo'
 import { Bubble } from './components/ui'
 
 const STEP_KEYS = ORDER_STEPS.map((s) => s.key as string)
+
+/** Restores the exact seed state (Sam's three orders, his bank balance, an empty draft). Two clicks, so it can't fire by accident. */
+function ResetDemoButton() {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => {
+    if (!armed) return
+    const t = window.setTimeout(() => setArmed(false), 4000)
+    return () => window.clearTimeout(t)
+  }, [armed])
+  return (
+    <button
+      type="button"
+      onClick={() => (armed ? resetDemo() : setArmed(true))}
+      title="Restore the demo's starting state: Sam's three orders and his bank balance. Clears anything you saved or typed."
+      className={`ml-auto rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${armed ? 'bg-bad-soft text-bad' : 'text-quiet hover:bg-ink-soft hover:text-ink'}`}
+    >
+      {armed ? 'Click again to reset' : 'Reset demo'}
+    </button>
+  )
+}
 
 function Shell() {
   const { pathname } = useLocation()
@@ -28,6 +48,7 @@ function Shell() {
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-5 sm:px-10">
           <LogoMark size={44} className="shrink-0" />
           <p className="font-serif text-[1.625rem] leading-none font-semibold tracking-tight text-ink">Landfall</p>
+          <ResetDemoButton />
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-10 sm:pt-12">

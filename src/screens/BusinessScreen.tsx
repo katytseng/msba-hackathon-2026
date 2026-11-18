@@ -99,7 +99,7 @@ export default function BusinessScreen() {
               {products.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-muted">
-                    No products yet. Click <b>Load sample</b> at the top, or add one.
+                    No products yet. Add your first items below.
                   </td>
                 </tr>
               )}

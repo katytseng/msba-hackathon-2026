@@ -8,6 +8,7 @@ import SuppliersScreen from '../screens/SuppliersScreen'
 import CompareScreen from '../screens/CompareScreen'
 import CashScreen from '../screens/CashScreen'
 import SummaryScreen from '../screens/SummaryScreen'
+import { fillSampleItems, fillSampleQuotes, sampleCompany, sampleOrderDate } from '../demo/sample'
 
 export const ORDER_STEPS = [
   { key: 'business', label: 'Order details', Screen: BusinessScreen },
@@ -26,7 +27,7 @@ const SAVE_FROM = 4 // step 4 (Cash check) leads on to the summary; the save con
 export default function OrderModal({ returnTo = '/dashboard' }: { returnTo?: string }) {
   const { step } = useParams()
   const navigate = useNavigate()
-  const { chosen, inputs, orders, editingId, saveOrder, resetToSample, reset } = useApp()
+  const { chosen, inputs, orders, editingId, saveOrder, reset, setInputs, setCompany, setSelectedId } = useApp()
   const idx = Math.max(0, ORDER_STEPS.findIndex((s) => s.key === step))
   const current = ORDER_STEPS[idx]
   const editing = orders.find((o) => o.id === editingId) ?? null
@@ -37,6 +38,16 @@ export default function OrderModal({ returnTo = '/dashboard' }: { returnTo?: str
   useEffect(() => {
     setName(editing?.name ?? '')
   }, [editing?.id, editing?.name])
+
+  // Quiet demo helper next to Clear: completes whichever step you are on (items, quotes or cash) to the scripted sample.
+  const canFill = current.key === 'business' || current.key === 'suppliers' || current.key === 'cash'
+  const fill = () => {
+    if (current.key === 'business') setInputs((p) => ({ ...p, business: { ...p.business, orderDate: sampleOrderDate() }, products: fillSampleItems(p.products) }))
+    else if (current.key === 'suppliers') {
+      setInputs((p) => ({ ...p, suppliers: fillSampleQuotes(p.products) }))
+      setSelectedId(null)
+    } else if (current.key === 'cash') setCompany(sampleCompany())
+  }
 
   const close = () => navigate(returnTo)
   const go = (i: number) => navigate(`/order/${ORDER_STEPS[i].key}`)
@@ -81,9 +92,11 @@ export default function OrderModal({ returnTo = '/dashboard' }: { returnTo?: str
               {editing ? `Edit order: ${editing.name}` : 'New order'}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" className="text-xs" onClick={resetToSample}>
-                Load sample
-              </Button>
+              {canFill && (
+                <Button variant="ghost" className="text-xs" onClick={fill}>
+                  Fill sample
+                </Button>
+              )}
               <Button variant="ghost" className="text-xs" onClick={reset}>
                 Clear
               </Button>

@@ -1,6 +1,7 @@
 // Calls the Cloudflare Worker for an AI explanation, with a hard 5 s timeout.
 // Any failure (not configured, timeout, error, a figure that fails the number check) returns a
 // fallback result, and the UI shows the template summary built from the same engine numbers.
+import { demoExplanation } from './demoCache'
 import { unverifiedNumbers } from './guard'
 import type { ExplainPayload } from './payload'
 
@@ -24,6 +25,9 @@ export async function explain(
   payload: ExplainPayload,
   { url = EXPLAIN_URL, timeoutMs = TIMEOUT_MS, fetchImpl = fetch }: { url?: string; timeoutMs?: number; fetchImpl?: typeof fetch } = {},
 ): Promise<ExplainResult> {
+  // The demo order has a saved, re-verified explanation: instant, and works with no network.
+  const saved = demoExplanation(payload)
+  if (saved) return { source: 'ai', explanation: saved, cached: true }
   if (!url) return { source: 'fallback', reason: 'not_configured' }
   const body = JSON.stringify(payload)
   const hit = memo.get(body)
