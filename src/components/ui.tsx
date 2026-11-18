@@ -393,7 +393,7 @@ export function Button({
 
 /** Shown on result screens until there is data to calculate with. */
 export function NeedsData({ children }: { children: ReactNode }) {
-  const { ranked, resetToSample, error } = useApp()
+  const { ranked, error } = useApp()
   if (error)
     return (
       <Card>
@@ -405,7 +405,6 @@ export function NeedsData({ children }: { children: ReactNode }) {
       <Card>
         <p className="mb-3 text-copy">Add products and at least one supplier quote first.</p>
         <div className="flex gap-2">
-          <Button onClick={resetToSample}>Reset to sample</Button>
           <Link to="/order/business" className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium transition-colors hover:bg-ink-soft">
             Go to inputs
           </Link>

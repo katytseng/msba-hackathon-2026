@@ -7,6 +7,7 @@ import type { Explanation } from '../ai/explain'
 import { DISCLAIMER } from '../summaries'
 import { ASSUMPTIONS, htsStatus, useRateRows } from '../rateRows'
 import { LogoMark } from './Logo'
+import { DEMO_TODAY } from '../demo/data'
 
 export interface ShownRecommendation {
   explanation: Partial<Explanation>
@@ -119,7 +120,7 @@ export function PrintReport({ recommendation }: { recommendation: ShownRecommend
 
   const rec: ShownRecommendation = recommendation ?? { explanation: templateExplanation(inputs, ranked, chosen, cash, be, rates.lastReviewed), ai: false }
   const e = rec.explanation
-  const today = new Date().toISOString().slice(0, 10)
+  const today = DEMO_TODAY
   const cheapestId = ranked[0]?.supplierId
 
   return createPortal(

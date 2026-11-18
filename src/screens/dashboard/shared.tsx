@@ -10,13 +10,15 @@ import {
   type SavedOrder,
 } from '../../engine/portfolio'
 import { rates, useApp } from '../../state'
+import { DEMO_TODAY } from '../../demo/data'
 
 // Categorical order colors, fixed order (dataviz reference palette, light mode).
 const LANE_COLORS = ['#2a78d6', '#c9623a', '#1baf7a', '#b58a2c', '#e87ba4', '#008300', '#6250d6', '#e34948']
 const laneColor = (o: SavedOrder, i: number) => LANE_COLORS[(o.color ?? i) % LANE_COLORS.length]
 
 export const supplierLabel = (r: { supplierName: string; country: string }) => `${r.supplierName} (${r.country})`
-export const todayIso = () => new Date().toISOString().slice(0, 10)
+/** "Today" for the dashboard is the demo day (one constant, demo/data.ts), so seeded dates always line up. */
+export const todayIso = () => DEMO_TODAY
 
 export interface Portfolio {
   startDate: string

@@ -37,7 +37,8 @@ If tests fail, the deploy stops. That is on purpose: a wrong number never goes l
 | `src/data/rates.json` | Every tariff and fee, with source and date. Tasks B1 and B2 update this. |
 | `public/hts/` | The full USITC Harmonized Tariff Schedule for the HTS code picker. Written by `scripts/sync-hts.mjs`; don't edit by hand. |
 | `src/components/HtsPicker.tsx`, `src/hts/` | HTS code picker: search by code or words, or browse Section → Chapter → Heading → line. |
-| `src/data/sample.json` | The menswear sample scenario (Load sample button). |
+| `src/data/sample.json` | The menswear sample scenario, used by the engine tests and the "Add 3 sample orders" button. |
+| `src/demo/` | Demo mode: seed data and `DEMO_TODAY` (`data.ts`), per-step Fill sample (`sample.ts`), computed demo numbers (`numbers.ts`, `sheet.ts`) and their locked test. |
 | `src/summaries/index.ts` | Template sentences built from engine numbers. No AI. |
 | `src/screens/` | Business, Supplier quotes, Compare, Cash check, Tariff what-if, Summary. |
 | `src/state.tsx` | Shared app state; runs the engine whenever inputs change. |
@@ -51,6 +52,17 @@ The app opens on the dashboard. **+ New order** opens steps 1 to 5 (plus the sum
 - **Cash flow**: all placed orders draw on one balance (company cash, buffer and APR under *Company cash settings*, set from your first saved order). The banner says whether you need to borrow, how much, by when, and when you can repay.
 
 Saved orders live in the browser (localStorage key `landed-cost:orders:v1`).
+
+## Demo mode (Vibathon presentation)
+
+The app starts as **Sam**, a small clothing importer, on **Wed Nov 18, 2026** (not the real clock), with three existing orders at different stages and a $24,000 bank balance. Everything is seeded from `src/demo/data.ts`.
+
+- **One date to change:** `DEMO_TODAY` in `src/demo/data.ts`. Every seeded order date, the dashboard's "today" and the new-order date (`DEMO_TODAY + 1`) follow it. After changing it or any seed number, run `npm run demo:sheet` to regenerate the snapshot and `DEMO_NUMBERS.md`, then re-check the script.
+- **Fill sample:** one quiet **Fill sample** button in the order pop-up's header, next to **Clear**. It completes whichever step you are on (Order details, Supplier quotes, Cash check) to the scripted state: instant, offline, same result every time. Type the first two items by hand (cashmere sweater, poncho), then press it.
+- **Reset:** the **Reset demo** button in the header (click twice) restores the exact seed state and reloads. Console fallback: `localStorage.clear(); location.reload()`.
+- **Numbers sheet:** `DEMO_NUMBERS.md` lists every figure the script quotes. `src/demo/demo.test.ts` fails if any of them change.
+- **AI summary:** the demo order's "Explain with AI" answers from a saved explanation (`src/ai/demoCache.ts`) written by the real Worker from these numbers. It is re-checked against the engine every time it is shown; if the numbers differ it is skipped, and the normal Worker call or template summary runs.
+- **Fictional:** supplier names, quotes, freight, lead times, quantities, sell prices, sales speeds, bank balance and buffer. **Real:** each item's base tariff (HTS `2026HTSRev23`) and the extra tariffs in `rates.json`.
 
 ## Changing a rate
 

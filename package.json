@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run --dir src",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "demo:sheet": "vitest run --dir src demo -u"
   },
   "dependencies": {
     "react": "^19.3.1",
