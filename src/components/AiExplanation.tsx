@@ -13,6 +13,8 @@ const ROWS: { key: Exclude<keyof Explanation, 'headline' | 'caveat'>; label: str
   { key: 'next_steps', label: 'Next steps' },
 ]
 
+const CACHED_DELAY_MS = 2500
+
 const FALLBACK_NOTE: Record<Extract<ExplainResult, { source: 'fallback' }>['reason'], string> = {
   not_configured: 'AI explanations are not set up, so this is the standard summary.',
   timeout: 'The AI explanation took too long, so this is the standard summary.',
@@ -52,7 +54,12 @@ export function AiExplanation({ onShown }: { onShown?: (r: ShownRecommendation |
 
   const run = async () => {
     setState({ key, status: 'loading' })
+    const started = Date.now()
     const result = await explain(payload)
+    // A saved or remembered answer comes back instantly; hold it so it still feels like the AI is writing.
+    if (result.source === 'ai' && result.cached) {
+      await new Promise((r) => setTimeout(r, Math.max(0, CACHED_DELAY_MS - (Date.now() - started))))
+    }
     setState((s) => (s?.key === key ? { key, status: 'done', result } : s))
   }
 
@@ -87,7 +94,9 @@ export function AiExplanation({ onShown }: { onShown?: (r: ShownRecommendation |
           )}
         </span>
       }
-      className="rounded-[1rem] border-0! shadow-none!"
+      className={`rounded-[1rem] border-0! shadow-none! ${
+        current?.status === 'loading' ? 'ai-glow ai-glow-active' : result?.source === 'ai' ? 'ai-glow' : ''
+      }`}
       actions={
         <Button variant={result ? 'secondary' : 'primary'} onClick={run}>
           {current?.status === 'loading' ? 'Writing…' : result ? 'Ask again' : EXPLAIN_URL ? 'Explain with AI' : 'Show summary'}

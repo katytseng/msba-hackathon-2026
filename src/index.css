@@ -208,6 +208,38 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--color-faint); background-clip: content-box; }
 
+/* Inner edge glow for the AI recommendation card: a quiet static wash when showing an answer,
+   and a slow orbiting amber/navy light while it is generating. Print and reduced motion get the static wash. */
+@property --glow-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.ai-glow { position: relative; overflow: hidden; }
+.ai-glow::before,
+.ai-glow::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+/* soft inset wash that follows the card's edge */
+.ai-glow::after {
+  box-shadow: inset 0 0 28px 2px rgb(242 140 10 / 0.10), inset 0 0 6px rgb(20 40 75 / 0.06);
+  transition: box-shadow 600ms ease;
+}
+/* thin gradient ring along the inside edge */
+.ai-glow::before {
+  padding: 3px;
+  background: conic-gradient(from var(--glow-angle), rgb(242 140 10 / 0.9), rgb(20 40 75 / 0.45), rgb(242 140 10 / 0.9) 50%, rgb(20 40 75 / 0.45), rgb(242 140 10 / 0.9));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0.35;
+  transition: opacity 600ms ease;
+}
+.ai-glow-active::before { opacity: 1; animation: glow-orbit 3.2s linear infinite; }
+.ai-glow-active::after {
+  box-shadow: inset 0 0 44px 6px rgb(242 140 10 / 0.22), inset 0 0 10px rgb(20 40 75 / 0.12);
+  animation: glow-pulse 1.8s ease-in-out infinite;
+}
+@keyframes glow-orbit { to { --glow-angle: 360deg; } }
+@keyframes glow-pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .ai-glow-active::before, .ai-glow-active::after { animation: none; }
+}
+
 /* The printed report lives beside #root: hidden on screen, the only thing printed on paper (US letter). */
 #print-report { display: none; }
 @page { size: letter; margin: 0.6in; }
