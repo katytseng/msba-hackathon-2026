@@ -4,6 +4,7 @@ import { AppProvider } from './state'
 import DashboardScreen, { DASH_TABS, type DashTab } from './screens/DashboardScreen'
 import OrderModal, { ORDER_STEPS } from './components/OrderModal'
 import { LogoMark } from './components/Logo'
+import { Bubble } from './components/ui'
 
 const STEP_KEYS = ORDER_STEPS.map((s) => s.key as string)
 
@@ -23,23 +24,40 @@ function Shell() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <LogoMark size={40} className="shrink-0" />
-          <div>
-            <p className="text-xl leading-tight font-extrabold tracking-tight text-ink">Landfall</p>
-            <p className="text-xs text-muted">What your orders really cost after tariffs, and whether your cash can carry them.</p>
-          </div>
+      <header className="border-b border-line">
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-5 sm:px-10">
+          <LogoMark size={44} className="shrink-0" />
+          <p className="font-serif text-[1.625rem] leading-none font-semibold tracking-tight text-ink">Landfall</p>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 pt-8 pb-16 sm:px-10 sm:pt-12">
         <DashboardScreen tab={lastTab.current} />
       </main>
-      <footer className="mx-auto flex max-w-6xl items-center gap-2 px-4 pb-8 text-xs text-muted">
-        <LogoMark size={20} className="shrink-0" />
-        <p>
-          <span className="font-semibold text-ink">Landfall</span>. Estimates, not customs or legal advice. Rates from rates.json, see an order's Summary step for sources and dates.
-        </p>
+      <footer className="mx-auto max-w-6xl px-5 pb-12 sm:px-10">
+        <div className="border-t border-line pt-6">
+          <div className="flex items-center gap-3 text-[0.8125rem] text-copy">
+            <LogoMark size={20} className="shrink-0" />
+            <p>
+              Designed and built by{' '}
+              <Bubble
+                label="Who made Landfall"
+                placement="above"
+                width={248}
+                className={(pinned) =>
+                  `font-medium text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink ${pinned ? 'decoration-ink' : ''}`
+                }
+                trigger="Landed Together"
+              >
+                <p className="mb-1.5 text-sm font-semibold text-ink">Landed Together</p>
+                <p className="leading-relaxed">Katy Tseng, Duncan Wu, Alessio Yu, Fan Zhang</p>
+              </Bubble>
+              .
+            </p>
+          </div>
+          <p className="mt-2 pl-8 text-xs leading-5 text-quiet">
+            Estimates, not customs or legal advice. Rates from rates.json, see an order's Summary step for sources and dates.
+          </p>
+        </div>
       </footer>
       <Routes>
         <Route path="/order/:step" element={<OrderModal returnTo={DASH_TABS.find((t) => t.key === lastTab.current)!.path} />} />

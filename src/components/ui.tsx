@@ -5,12 +5,27 @@ import { useApp } from '../state'
 import { glossary, type GlossaryKey } from '../glossary'
 
 /**
- * ⓘ button that shows a plain-English definition from glossary.ts.
- * Hover to peek (hides when the cursor leaves); click to pin (stays until you click elsewhere or press Esc).
- * The popover renders in a portal with fixed position so table scroll areas can't clip it.
+ * Button that opens a small bubble: hover to peek (hides when the cursor leaves), click to pin
+ * (stays until you click elsewhere or press Esc). The bubble renders in a portal with fixed position
+ * so table scroll areas can't clip it. Used by Info (glossary definitions) and the footer credit.
  */
-export function Info({ term }: { term: GlossaryKey }) {
-  const entry = glossary[term]
+export function Bubble({
+  label,
+  trigger,
+  className,
+  width = 272,
+  placement = 'below',
+  children,
+}: {
+  /** Accessible name of the trigger button. */
+  label: string
+  trigger: ReactNode
+  /** Trigger classes; receives whether the bubble is pinned open. */
+  className: (pinned: boolean) => string
+  width?: number
+  placement?: 'below' | 'above'
+  children: ReactNode
+}) {
   const [mode, setMode] = useState<'hover' | 'pinned' | null>(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
   const btn = useRef<HTMLButtonElement>(null)
@@ -18,17 +33,16 @@ export function Info({ term }: { term: GlossaryKey }) {
   const hideTimer = useRef<number | undefined>(undefined)
   const id = useId()
   const open = mode !== null
-  const WIDTH = 272
 
   const place = () => {
     const r = btn.current?.getBoundingClientRect()
     if (!r) return
-    const left = Math.min(Math.max(8, r.left + r.width / 2 - WIDTH / 2), window.innerWidth - WIDTH - 8)
-    setPos({ top: r.bottom + 6, left })
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - width / 2), window.innerWidth - width - 8)
+    setPos({ top: placement === 'above' ? r.top - 8 : r.bottom + 6, left })
   }
   const cancelHide = () => window.clearTimeout(hideTimer.current)
 
-  // Hover: show now, hide shortly after the cursor leaves (the grace period lets you move onto the popover).
+  // Hover: show now, hide shortly after the cursor leaves (the grace period lets you move onto the bubble).
   const peek = () => {
     cancelHide()
     if (mode === null) {
@@ -73,6 +87,7 @@ export function Info({ term }: { term: GlossaryKey }) {
       window.removeEventListener('scroll', place, true)
       window.removeEventListener('resize', place)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   useEffect(() => cancelHide, [])
@@ -85,14 +100,12 @@ export function Info({ term }: { term: GlossaryKey }) {
         onClick={onClick}
         onMouseEnter={peek}
         onMouseLeave={unpeek}
-        aria-label={`What is ${entry.term}?`}
+        aria-label={label}
         aria-expanded={open}
         aria-controls={open ? id : undefined}
-        className={`ml-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] text-[13px] leading-none normal-case transition ${
-          mode === 'pinned' ? 'text-ink' : 'text-muted hover:text-ink'
-        } focus-visible:outline-2 focus-visible:outline-ink`}
+        className={className(mode === 'pinned')}
       >
-        ⓘ
+        {trigger}
       </button>
       {open &&
         createPortal(
@@ -102,15 +115,39 @@ export function Info({ term }: { term: GlossaryKey }) {
             role="note"
             onMouseEnter={cancelHide}
             onMouseLeave={() => mode === 'hover' && unpeek()}
-            style={{ top: pos.top, left: pos.left, width: WIDTH }}
-            className="fixed z-50 rounded-lg border border-line bg-surface p-3 text-left text-xs font-normal normal-case tracking-normal text-copy shadow-lg"
+            style={{ top: pos.top, left: pos.left, width, transform: placement === 'above' ? 'translateY(-100%)' : undefined }}
+            className="no-print fixed z-50 rounded-xl border border-line bg-surface p-4 text-left text-xs font-normal normal-case tracking-normal text-copy shadow-pop"
           >
-            <p className="mb-1 text-sm font-semibold text-ink">{entry.term}</p>
-            <p className="leading-relaxed">{entry.definition}</p>
+            {children}
           </div>,
           document.body,
         )}
     </>
+  )
+}
+
+/** ⓘ button that shows a plain-English definition from glossary.ts. */
+export function Info({ term, lead = false }: { term: GlossaryKey; lead?: boolean }) {
+  const entry = glossary[term]
+  return (
+    <Bubble
+      label={`What is ${entry.term}?`}
+      className={(pinned) =>
+        `${lead ? 'mr-1' : 'ml-1'} inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full align-[-2px] leading-none normal-case transition-colors ${
+          pinned ? 'text-ink' : 'text-muted hover:text-ink'
+        } focus-visible:outline-2 focus-visible:outline-ink`
+      }
+      trigger={
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.4" />
+          <path d="M8 7.2v3.6" />
+          <circle cx="8" cy="4.9" r="0.5" fill="currentColor" stroke="none" />
+        </svg>
+      }
+    >
+      <p className="mb-1.5 text-sm font-semibold text-ink">{entry.term}</p>
+      <p className="leading-relaxed">{entry.definition}</p>
+    </Bubble>
   )
 }
 
@@ -153,10 +190,29 @@ export function DetailsToggle({ open, onToggle, label = 'details', controls }: {
       onClick={onToggle}
       aria-expanded={open}
       aria-controls={controls}
-      className="text-xs font-medium text-ink hover:underline"
+      className="inline-flex items-center gap-1 text-xs font-medium text-ink underline-offset-4 hover:underline"
     >
-      {open ? `Hide ${label}` : `Show ${label}`} <span aria-hidden>{open ? '▴' : '▾'}</span>
+      {open ? `Hide ${label}` : `Show ${label}`}
+      <Chevron open={open} />
     </button>
+  )
+}
+
+/** Small drawn check mark, for "same as before" and "stay" states. */
+export function Check() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-good">
+      <path d="m3.5 8.4 3 3 6-6.8" />
+    </svg>
+  )
+}
+
+/** Small drawn chevron: points down when closed, up when open. */
+export function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+      <path d="m3.5 6 4.5 4.5L12.5 6" />
+    </svg>
   )
 }
 
@@ -173,10 +229,10 @@ export function Card({
   className?: string
 }) {
   return (
-    <section className={`rounded-xl border border-line bg-surface p-5 shadow-sm ${className}`}>
+    <section className={`rounded-card border border-line bg-surface p-5 shadow-ui sm:p-7 ${className}`}>
       {(title || actions) && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {title && <h2 className="text-section text-ink">{title}</h2>}
           {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
       )}
@@ -206,12 +262,12 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="relative grid rounded-lg border border-line bg-ink-soft p-0.5 text-xs font-medium"
+      className="relative grid rounded-lg bg-ink-soft p-0.5 text-xs font-medium"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       <span
         aria-hidden
-        className="absolute inset-y-0.5 left-0.5 rounded-md bg-surface shadow-sm ring-1 ring-line transition-transform duration-200 ease-out motion-reduce:transition-none"
+        className="absolute inset-y-0.5 left-0.5 rounded-md bg-surface shadow-[0_1px_2px_rgb(80_56_20/0.12)] transition-transform duration-200 ease-out motion-reduce:transition-none"
         style={{ width: `calc((100% - 4px) / ${options.length})`, transform: `translateX(${index * 100}%)` }}
       />
       {options.map((o) => (
@@ -223,7 +279,7 @@ export function Segmented<T extends string>({
             checked={o.value === value}
             onChange={() => onChange(o.value)}
           />
-          <span className="block whitespace-nowrap rounded-md px-2.5 py-1 text-center text-muted transition-colors peer-checked:text-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink hover:text-ink">
+          <span className="block whitespace-nowrap rounded-md px-3 py-1.5 text-center text-muted transition-colors peer-checked:text-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink hover:text-ink">
             {o.label}
           </span>
         </label>
@@ -234,10 +290,12 @@ export function Segmented<T extends string>({
 
 export function PageHeader({ step, title, subtitle }: { step: number; title: string; subtitle?: string }) {
   return (
-    <div className="mb-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink">Step {step}</p>
-      <h1 className="text-2xl font-bold text-ink">{title}</h1>
-      {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}
+    <div className="mb-8">
+      <h1 className="text-[1.75rem] leading-9 text-ink md:text-title">{title}</h1>
+      <p className="mt-1.5 max-w-[70ch] text-body text-muted">
+        <span className="sr-only">Step {step}. </span>
+        {subtitle}
+      </p>
     </div>
   )
 }
@@ -277,14 +335,14 @@ export function NumberField({
   }, [value])
 
   const input = (
-    <div className="flex items-center rounded-md border border-line-strong bg-surface focus-within:border-ink focus-within:ring-1 focus-within:ring-ink">
-      {prefix && <span className="pl-2 text-sm text-muted">{prefix}</span>}
+    <div className="flex items-center rounded-lg border border-line-strong bg-surface transition-colors hover:border-faint focus-within:border-ink focus-within:ring-2 focus-within:ring-ink/15">
+      {prefix && <span className="pl-3 text-sm text-muted">{prefix}</span>}
       <input
         type="number"
         inputMode="decimal"
         step={step}
         aria-label={label}
-        className={`w-full min-w-0 bg-transparent px-2 ${compact ? 'py-1' : 'py-1.5'} text-right text-sm tabular-nums outline-none`}
+        className={`w-full min-w-0 bg-transparent px-3 ${compact ? 'py-1.5' : 'py-2'} text-right text-sm tabular-nums outline-none`}
         value={text}
         onChange={(e) => {
           setText(e.target.value)
@@ -292,13 +350,13 @@ export function NumberField({
           onChange(Number.isFinite(n) ? n / scale : 0)
         }}
       />
-      {suffix && <span className="pr-2 text-sm text-muted">{suffix}</span>}
+      {suffix && <span className="pr-3 text-sm text-muted">{suffix}</span>}
     </div>
   )
   if (!label || compact) return <div className={className}>{input}</div>
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 flex items-center text-sm font-medium text-copy">
+      <span className="mb-1.5 flex items-center text-sm font-medium text-copy">
         {label}
         {info && <Info term={info} />}
       </span>
@@ -321,13 +379,13 @@ export function Button({
   type?: 'button' | 'submit'
 }) {
   const styles = {
-    primary: 'bg-ink text-white hover:bg-ink-hover',
-    secondary: 'border border-line-strong bg-surface text-ink hover:bg-page',
-    ghost: 'text-muted hover:bg-ink-soft',
-    danger: 'text-red-700 hover:bg-red-50',
+    primary: 'bg-ink text-white shadow-[0_1px_2px_rgb(20_40_75/0.25)] hover:bg-ink-hover active:translate-y-px',
+    secondary: 'border border-line-strong bg-surface text-ink hover:bg-ink-soft active:translate-y-px',
+    ghost: 'text-muted hover:bg-ink-soft hover:text-ink',
+    danger: 'text-bad hover:bg-bad-soft',
   }[variant]
   return (
-    <button type={type} onClick={onClick} className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${styles} ${className}`}>
+    <button type={type} onClick={onClick} className={`rounded-lg px-4 py-2 text-sm font-medium transition-[background-color,color,transform] duration-150 ${styles} ${className}`}>
       {children}
     </button>
   )
@@ -339,7 +397,7 @@ export function NeedsData({ children }: { children: ReactNode }) {
   if (error)
     return (
       <Card>
-        <p className="text-red-700">Something in the inputs doesn't match rates.json: {error}</p>
+        <p className="text-bad">Something in the inputs doesn't match rates.json: {error}</p>
       </Card>
     )
   if (ranked.length === 0 || ranked[0].units === 0)
@@ -348,7 +406,7 @@ export function NeedsData({ children }: { children: ReactNode }) {
         <p className="mb-3 text-copy">Add products and at least one supplier quote first.</p>
         <div className="flex gap-2">
           <Button onClick={resetToSample}>Reset to sample</Button>
-          <Link to="/order/business" className="rounded-md border border-line-strong px-3 py-1.5 text-sm font-medium hover:bg-page">
+          <Link to="/order/business" className="rounded-lg border border-line-strong px-4 py-2 text-sm font-medium transition-colors hover:bg-ink-soft">
             Go to inputs
           </Link>
         </div>
@@ -360,27 +418,55 @@ export function NeedsData({ children }: { children: ReactNode }) {
 export function NextLink({ to, children }: { to: string; children: ReactNode }) {
   return (
     <div className="mt-6 flex justify-end">
-      <Link to={to} className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink-hover">
-        {children} →
+      <Link to={to} className="rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-white shadow-[0_1px_2px_rgb(20_40_75/0.25)] transition-colors hover:bg-ink-hover">
+        {children} <Arrow dir="right" />
       </Link>
     </div>
   )
 }
 
+/** Drawn status mark in a disc: check (good), exclamation (warn), i (info). White on a dark enough ground for contrast. */
+export function StatusIcon({ tone, className = '' }: { tone: 'good' | 'warn' | 'info'; className?: string }) {
+  const bg = { good: 'bg-good', warn: 'bg-accent-ink', info: 'bg-ink' }[tone]
+  return (
+    <span aria-hidden className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${bg} ${className}`}>
+      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {tone === 'good' && <path d="m3.5 8.4 3 3 6-6.8" />}
+        {tone === 'warn' && <path d="M8 3.5v5.2M8 12.2v.1" />}
+        {tone === 'info' && <path d="M8 7.2v5M8 3.9v.1" />}
+      </svg>
+    </span>
+  )
+}
+
+/** Drawn arrow for Back / Next buttons. */
+export function Arrow({ dir }: { dir: 'left' | 'right' }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 align-[-1px]">
+      {dir === 'right' ? <path d="M3 8h10M9 4l4 4-4 4" /> : <path d="M13 8H3M7 4 3 8l4 4" />}
+    </svg>
+  )
+}
+
+/** Drawn plus for "add" buttons. */
+export function Plus() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="mr-1.5 inline-block shrink-0 align-[-1px]">
+      <path d="M8 3v10M3 8h10" />
+    </svg>
+  )
+}
+
 export function Callout({ tone, children }: { tone: 'good' | 'warn' | 'info'; children: ReactNode }) {
   const styles = {
-    good: 'border-emerald-300 bg-emerald-50',
-    warn: 'border-accent/40 bg-accent-soft',
-    info: 'border-line-strong bg-ink-soft',
+    good: 'border-good-line bg-good-soft',
+    warn: 'border-accent-line bg-accent-soft',
+    info: 'border-line bg-ink-soft',
   }[tone]
-  const icon = { good: '✓', warn: '!', info: 'i' }[tone]
-  const iconStyle = { good: 'bg-emerald-600', warn: 'bg-accent', info: 'bg-ink' }[tone]
   return (
-    <div className={`flex gap-3 rounded-lg border p-4 ${styles}`}>
-      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${iconStyle}`}>
-        {icon}
-      </span>
-      <div className="space-y-1 text-sm text-ink">{children}</div>
+    <div className={`flex gap-3.5 rounded-xl border px-5 py-4 ${styles}`}>
+      <StatusIcon tone={tone} className="mt-0.5" />
+      <div className="space-y-1.5 text-sm leading-6 text-ink">{children}</div>
     </div>
   )
 }
@@ -388,14 +474,14 @@ export function Callout({ tone, children }: { tone: 'good' | 'warn' | 'info'; ch
 /** Click-to-expand section. Native details/summary: keyboard and screen reader friendly, closed by default. */
 export function Details({ summary, children }: { summary: string; children: ReactNode }) {
   return (
-    <details className="group mt-3 rounded-md border border-line bg-page text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-3 py-2 font-medium text-ink hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-ink [&::-webkit-details-marker]:hidden">
-        <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">
-          ▸
-        </span>
+    <details className="group mt-4 rounded-xl border border-line bg-page text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-4 py-3 font-medium text-ink transition-colors hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-ink [&::-webkit-details-marker]:hidden">
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted transition-transform group-open:rotate-90">
+          <path d="m6 3 5 5-5 5" />
+        </svg>
         {summary}
       </summary>
-      <div className="px-3 pb-3 pt-1 text-copy">{children}</div>
+      <div className="px-4 pb-4 pt-1 leading-6 text-copy">{children}</div>
     </details>
   )
 }

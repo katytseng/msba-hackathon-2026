@@ -12,7 +12,7 @@ import {
 import { rates, useApp } from '../../state'
 
 // Categorical order colors, fixed order (dataviz reference palette, light mode).
-const LANE_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948']
+const LANE_COLORS = ['#2a78d6', '#c9623a', '#1baf7a', '#b58a2c', '#e87ba4', '#008300', '#6250d6', '#e34948']
 const laneColor = (o: SavedOrder, i: number) => LANE_COLORS[(o.color ?? i) % LANE_COLORS.length]
 
 export const supplierLabel = (r: { supplierName: string; country: string }) => `${r.supplierName} (${r.country})`
@@ -59,7 +59,7 @@ export function usePortfolio(): Portfolio {
     analyses,
     failed,
     pc,
-    colorOf: (id) => analyses.find((x) => x.a.order.id === id)?.color ?? '#5b6678',
+    colorOf: (id) => analyses.find((x) => x.a.order.id === id)?.color ?? '#686257',
     nameOf: (id) => analyses.find((x) => x.a.order.id === id)?.a.order.name ?? '',
   }
 }
@@ -132,12 +132,12 @@ export function belowRanges(pc: PortfolioCash, buffer: number): [number, number]
 
 /** Small number tile used across the dashboard tabs. */
 export function Stat({ label, value, sub, tone = 'plain', children }: { label: ReactNode; value: string; sub?: ReactNode; tone?: 'plain' | 'warn' | 'good'; children?: ReactNode }) {
-  const color = tone === 'warn' ? 'text-accent-ink' : tone === 'good' ? 'text-emerald-700' : 'text-ink'
+  const color = tone === 'warn' ? 'text-accent-ink' : tone === 'good' ? 'text-good' : 'text-ink'
   return (
-    <div className="rounded-xl border border-line bg-surface px-4 py-3 shadow-sm">
-      <dt className="flex items-center text-[11px] uppercase tracking-wide text-muted">{label}</dt>
-      <dd className={`text-2xl font-bold tabular-nums ${color}`}>{value}</dd>
-      {sub && <dd className="text-xs text-muted">{sub}</dd>}
+    <div className="border-t border-ink/70 pt-3.5">
+      <dt className="flex items-center text-[0.8125rem] font-medium text-muted">{label}</dt>
+      <dd className={`mt-1.5 text-[1.75rem] leading-9 font-semibold tracking-tight tabular-nums ${color}`}>{value}</dd>
+      {sub && <dd className="mt-1 text-[0.8125rem] leading-5 text-muted">{sub}</dd>}
       {children}
     </div>
   )

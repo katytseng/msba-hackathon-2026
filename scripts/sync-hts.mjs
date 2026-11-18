@@ -3,8 +3,11 @@
 // (https://hts.usitc.gov/reststop, no key needed) and writes:
 //   public/hts/hts.json      compact dataset the HTS code picker loads in the browser
 //   public/hts/meta.json     release name, fetch time, counts
+//   public/hts/checked.json  the date of the latest check, written on every run even when nothing changed, plus
+//                            whether each base tariff typed into src/data/rates.json still matches the schedule
 //   data/hts/chapter99.json  Chapter 99 (extra tariffs such as Section 301), kept for review in git diffs
-// It does nothing when the USITC release has not changed, unless --force is passed.
+// When the USITC release has not changed it only refreshes checked.json (unless --force is passed), so the app can
+// say "last checked <today>" truthfully.
 // Only "Free" and plain "X%" rates are usable in estimates; anything else is kept but marked unsupported.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
@@ -38,10 +41,35 @@ const releases = await getJson(`${API}/releaseList`)
 const current = releases.find((r) => r.status === 'current') ?? releases[0]
 if (!current?.name) throw new Error('Could not find the current HTS release')
 
+/**
+ * For each base tariff typed into rates.json: does the schedule still list that rate for the code (or, for a
+ * heading such as 6201.40, for a line beneath it)? The app shows the check date only for rates that still match.
+ */
+async function baseRatesMatch(rows) {
+  const typed = JSON.parse(await readFile('src/data/rates.json', 'utf8').catch(() => '{}')).baseTariffs ?? {}
+  const result = {}
+  for (const [code, entry] of Object.entries(typed)) {
+    result[code] = rows.some((r) => r.length >= 5 && (r[0] === code || r[0].startsWith(code + '.')) && Math.abs(r[4] - entry.rate) < 1e-9)
+  }
+  return result
+}
+
+/** Record today's date as the last check. Sets `checked_changed` so the workflow knows whether there is anything to commit. */
+async function markChecked(rows) {
+  const today = new Date().toISOString().slice(0, 10)
+  const before = await readFile('public/hts/checked.json', 'utf8').catch(() => '')
+  const next = JSON.stringify({ checkedAt: today, release: current.name, baseRatesMatch: await baseRatesMatch(rows) }) + '\n'
+  await mkdir('public/hts', { recursive: true })
+  await writeFile('public/hts/checked.json', next)
+  await out('checked_changed', String(before !== next))
+  await out('release', current.name)
+}
+
 const prev = JSON.parse(await readFile('public/hts/meta.json', 'utf8').catch(() => '{}'))
 if (!force && prev.release === current.name) {
-  console.log(`HTS ${current.name} is already synced. Nothing to do.`)
+  console.log(`HTS ${current.name} is already synced. Recording today's check.`)
   await out('changed', 'false')
+  await markChecked(JSON.parse(await readFile('public/hts/hts.json', 'utf8')).rows)
   process.exit(0)
 }
 
@@ -103,6 +131,6 @@ await writeFile('data/hts/chapter99.json', JSON.stringify({ release: meta.releas
 
 const ch99Changed = prev.chapter99Hash !== undefined && prev.chapter99Hash !== meta.chapter99Hash
 console.log(`Wrote ${rows.length} rows: ${rated} rated lines, ${supported} with a percent or free rate. Chapter 99 ${ch99Changed ? 'CHANGED' : 'unchanged'}.`)
+await markChecked(rows)
 await out('changed', 'true')
-await out('release', meta.release)
 await out('ch99_changed', String(ch99Changed))

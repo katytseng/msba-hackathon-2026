@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import { ancestors, labelFor, searchHts, type HtsData, type HtsEntry } from '../hts/data'
 import { loadHts, recentCodes, rememberCode, useHts } from '../hts/load'
 import { CHAPTERS, SECTIONS, pad2 } from '../hts/sections'
-import { pct } from '../format'
+import { niceDate, pct } from '../format'
+import { htsStatus } from '../rateRows'
 import { rates } from '../state'
 
 export interface HtsPick {
@@ -135,11 +136,11 @@ export default function HtsPicker({ code, description, onPick }: Props) {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         title={`${code} · ${description ?? rates.baseTariffs[code]?.description ?? ""}`}
-        className="flex w-72 items-center gap-2 rounded-md border border-line-strong bg-surface px-2 py-1 text-left text-sm hover:border-muted"
+        className="field flex w-72 items-center gap-2 !py-1.5 text-left"
       >
         <span className="font-mono text-xs text-ink">{code || 'Pick a code'}</span>
         <span className="min-w-0 flex-1 truncate text-muted">{description ?? rates.baseTariffs[code]?.description ?? ''}</span>
-        <span aria-hidden className="text-muted">▾</span>
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted"><path d="m3.5 6 4.5 4.5L12.5 6" /></svg>
       </button>
       {open &&
         createPortal(
@@ -149,10 +150,10 @@ export default function HtsPicker({ code, description, onPick }: Props) {
             aria-label="Find an HTS code"
             onKeyDown={onKey}
             style={{ top: pos.top, left: pos.left, width: PANEL_W, maxHeight: pos.maxH }}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-lg border border-line bg-surface text-sm shadow-xl"
+            className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-line bg-surface text-sm shadow-pop"
           >
-            <div className="border-b border-line p-2">
-              <div className="mb-2 flex gap-1" role="tablist">
+            <div className="border-b border-line p-3">
+              <div className="mb-3 flex gap-1.5" role="tablist">
                 {(['search', 'browse'] as const).map((t) => (
                   <button
                     key={t}
@@ -160,7 +161,7 @@ export default function HtsPicker({ code, description, onPick }: Props) {
                     role="tab"
                     aria-selected={view.tab === t}
                     onClick={() => setView({ tab: t })}
-                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${view.tab === t ? 'bg-ink text-white' : 'text-muted hover:bg-ink-soft'}`}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${view.tab === t ? 'bg-ink text-white' : 'text-muted hover:bg-ink-soft hover:text-ink'}`}
                   >
                     {t === 'search' ? 'Search' : 'Browse all sections'}
                   </button>
@@ -173,16 +174,16 @@ export default function HtsPicker({ code, description, onPick }: Props) {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Code (6109.10) or words (cotton t-shirt, sneakers, laptop)"
                   aria-label="Search HTS codes"
-                  className="w-full rounded-md border border-line-strong px-2 py-1.5 text-sm"
+                  className="field w-full"
                 />
               )}
             </div>
             <div key={JSON.stringify(view)} className="min-h-0 flex-1 overflow-y-auto">
-              {error && <p className="p-3 text-red-700">Couldn’t load the tariff schedule ({error}). Close and try again.</p>}
+              {error && <p className="p-3 text-bad">Couldn’t load the tariff schedule ({error}). Close and try again.</p>}
               {!data && !error && <p className="p-3 text-muted">Loading the tariff schedule…</p>}
               {data && view.tab === 'search' && (
                 <>
-                  {!query.trim() && <p className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-muted">Recent and common codes</p>}
+                  {!query.trim() && <p className="px-4 pt-3 pb-1 text-xs font-medium text-muted">Recent and common codes</p>}
                   {query.trim() && list.length === 0 && (
                     <p className="p-3 text-muted">
                       No match. Try fewer or simpler words (the schedule says “trousers”, not “jeans”), or use Browse.
@@ -207,11 +208,11 @@ export default function HtsPicker({ code, description, onPick }: Props) {
 
 function RateBadge({ e }: { e: HtsEntry }) {
   if (e.rate !== null)
-    return <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium tabular-nums text-emerald-800">{e.rate === 0 ? 'Free' : pct(e.rate)}</span>
+    return <span className="shrink-0 rounded-full bg-good-soft px-2 py-0.5 text-xs font-medium tabular-nums text-good">{e.rate === 0 ? 'Free' : pct(e.rate)}</span>
   return (
     <span
       title={`Rate is “${e.general}”. Only percent and Free rates can be estimated, so this line can’t be picked.`}
-      className="max-w-40 shrink-0 truncate rounded bg-accent-soft px-1.5 py-0.5 text-xs font-medium text-accent-ink"
+      className="max-w-40 shrink-0 truncate rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-ink"
     >
       {e.general} · not supported
     </span>
@@ -229,7 +230,7 @@ function ResultRow({ data, e, idx, active, onHover, onPick }: { data: HtsData; e
       data-idx={idx}
       onMouseEnter={onHover}
       onClick={onPick}
-      className={`flex cursor-pointer items-start gap-3 px-3 py-2 ${active ? 'bg-ink-soft' : ''} ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+      className={`flex cursor-pointer items-start gap-3 px-4 py-2.5 ${active ? 'bg-ink-soft' : ''} ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
     >
       <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-ink">{e.code}</span>
       <span className="min-w-0 flex-1">
@@ -271,7 +272,7 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
             type="button"
             disabled={e.rate === null}
             onClick={() => pick(e)}
-            className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-transparent"
+            className="flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-transparent"
           >
             <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-ink">{e.code}</span>
             <span className="min-w-0 flex-1 text-ink">{e.desc.replace(/:$/, '')}</span>
@@ -284,7 +285,7 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
 
   return (
     <div>
-      <nav aria-label="Browse path" className="flex flex-wrap items-center gap-1 border-b border-line/60 px-3 py-2 text-xs">
+      <nav aria-label="Browse path" className="flex flex-wrap items-center gap-1 border-b border-line px-3 py-2 text-xs">
         {crumbs.map((c, k) => (
           <span key={k} className="flex items-center gap-1">
             {k > 0 && <span className="text-muted">›</span>}
@@ -300,7 +301,7 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
       </nav>
       {view.chapter && <p className="px-3 pt-2 text-xs text-muted">{CHAPTERS[Number(view.chapter)]}</p>}
       {node?.rated && (
-        <div className="flex items-center gap-3 border-b border-line/60 bg-page px-3 py-2">
+        <div className="flex items-center gap-3 border-b border-line bg-page px-3 py-2">
           <span className="min-w-0 flex-1 text-copy">
             Use <span className="font-mono text-xs">{node.code}</span> itself
           </span>
@@ -318,7 +319,7 @@ function Browse({ data, view, setView, pick }: { data: HtsData; view: Extract<Vi
 function NavRow({ onClick, left, text, right }: { onClick: () => void; left: string; text: string; right?: ReactNode }) {
   return (
     <li>
-      <button type="button" onClick={onClick} className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-ink-soft">
+      <button type="button" onClick={onClick} className="flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-ink-soft">
         <span className="w-28 shrink-0 pt-0.5 font-mono text-xs text-muted">{left}</span>
         <span className="min-w-0 flex-1 text-ink">{text}</span>
         {right && <span className="shrink-0 text-xs text-muted">{right}</span>}
@@ -330,8 +331,8 @@ function NavRow({ onClick, left, text, right }: { onClick: () => void; left: str
 
 function Footer({ data }: { data: HtsData | null }) {
   return (
-    <p className="border-t border-line bg-page px-3 py-1.5 text-xs text-muted">
-      {data ? `USITC HTS ${data.title}, checked ${new Date(data.fetchedAt).toLocaleDateString()}. ` : ''}
+    <p className="border-t border-line bg-page px-4 py-2.5 text-xs leading-5 text-muted">
+      {data ? `USITC HTS ${data.title}, last checked ${niceDate(htsStatus.checkedAt)}. ` : ''}
       Only percent and Free rates can be estimated. Per-kg, per-unit and mixed rates are shown but can’t be picked.
     </p>
   )

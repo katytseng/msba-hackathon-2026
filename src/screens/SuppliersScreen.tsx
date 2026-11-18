@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Supplier } from '../engine'
 import { pct, usd } from '../format'
 import { rates, useApp } from '../state'
-import { Button, Card, Collapse, DetailsToggle, Info, NumberField, PageHeader } from '../components/ui'
+import { Button, Card, Collapse, DetailsToggle, Info, NumberField, PageHeader, Plus } from '../components/ui'
 
 const countries = Object.keys(rates.extraTariffs)
 
@@ -42,12 +42,12 @@ export default function SuppliersScreen() {
       <PageHeader step={2} title="Supplier quotes" subtitle="Unit prices (FOB), freight and payment terms from each supplier." />
 
       {products.length === 0 && (
-        <Card className="mb-5">
+        <Card className="mb-8">
           <p className="text-muted">Add products on the Order details step first, or click <b>Reset to sample</b>.</p>
         </Card>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
         {suppliers.map((s) => {
           const extra = rates.extraTariffs[s.country]
           const r = ranked.find((x) => x.supplierId === s.id)
@@ -56,21 +56,21 @@ export default function SuppliersScreen() {
           const detailsId = `tariff-details-${s.id}`
           return (
             <Card key={s.id}>
-              <div className="mb-3 flex items-center gap-2">
+              <div className="mb-5 flex items-center gap-2">
                 <input
-                  className="w-full rounded-md border border-line-strong px-2 py-1 font-semibold"
+                  className="field w-full !py-1.5 font-semibold"
                   value={s.name}
                   onChange={(e) => setSupplier(s.id, { name: e.target.value })}
                 />
                 <Button variant="danger" onClick={() => removeSupplier(s.id)}>Remove</Button>
               </div>
 
-              <label className="mb-1 flex items-center text-sm font-medium text-copy">
+              <label className="mb-1.5 flex items-center text-sm font-medium text-copy">
                 Ships from
                 <Info term="country" />
               </label>
               <select
-                className="mb-1 w-full rounded-md border border-line-strong bg-surface px-2 py-1.5 text-sm"
+                className="field mb-1 w-full"
                 value={s.country}
                 onChange={(e) => setSupplier(s.id, { country: e.target.value })}
               >
@@ -78,7 +78,7 @@ export default function SuppliersScreen() {
                   <option key={c}>{c}</option>
                 ))}
               </select>
-              <div className="mb-4 mt-2 rounded-lg bg-page p-3 text-sm">
+              <div className="mb-6 mt-4 border-y border-line py-4 text-sm">
                 {r && r.customsValue > 0 ? (
                   <>
                     <div className="flex items-baseline justify-between gap-2">
@@ -93,7 +93,7 @@ export default function SuppliersScreen() {
                       <DetailsToggle open={showDetails} controls={detailsId} onToggle={() => setOpenTariff((o) => ({ ...o, [s.id]: !o[s.id] }))} />
                     </div>
                     <Collapse open={showDetails} id={detailsId}>
-                      <dl className="mt-2 space-y-1 border-t border-line pt-2 text-xs tabular-nums text-muted">
+                      <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-xs tabular-nums text-muted">
                         <div className="flex justify-between gap-2">
                           <dt className="flex items-center">
                             Base tariff (HTS)
@@ -123,11 +123,11 @@ export default function SuppliersScreen() {
                 )}
               </div>
 
-              <p className="mb-2 flex items-center text-sm font-medium text-copy">
+              <p className="mb-3 flex items-center text-sm font-medium text-copy">
                 Unit price per product (FOB)
                 <Info term="unitPrice" />
               </p>
-              <div className="mb-4 space-y-1.5">
+              <div className="mb-6 space-y-2.5">
                 {products.map((p) => (
                   <div key={p.id} className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm text-muted">{p.name}</span>
@@ -136,7 +136,7 @@ export default function SuppliersScreen() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-line pt-6">
                 <NumberField label="Freight quote" info="freight" prefix="$" value={s.freight} onChange={(v) => setSupplier(s.id, { freight: v })} />
                 <NumberField label="Deposit" info="deposit" suffix="%" scale={100} value={s.depositPct} onChange={(v) => setSupplier(s.id, { depositPct: Math.min(1, Math.max(0, v)) })} />
                 <NumberField label="Lead time" info="leadTime" suffix="days" value={s.leadTimeDays} onChange={(v) => setSupplier(s.id, { leadTimeDays: Math.max(0, Math.round(v)) })} />
@@ -156,9 +156,9 @@ export default function SuppliersScreen() {
 
         <button
           onClick={addSupplier}
-          className="flex min-h-40 items-center justify-center rounded-xl border-2 border-dashed border-line-strong text-muted hover:border-ink hover:text-ink"
+          className="flex min-h-48 items-center justify-center rounded-card border border-dashed border-line-strong text-sm font-medium text-muted transition-colors hover:border-ink hover:bg-surface hover:text-ink"
         >
-          + Add supplier
+          <Plus />Add supplier
         </button>
       </div>
     </div>

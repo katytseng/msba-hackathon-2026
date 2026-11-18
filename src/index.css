@@ -3,31 +3,42 @@
 /*
  * Landfall design tokens. Use these (bg-page, text-ink, text-muted, bg-accent, rounded-ui, shadow-ui...)
  * instead of raw Tailwind colors in components.
+ *
+ * Direction: a warm, paper-toned workspace. Navy ink on warm neutrals, amber only for "look here",
+ * a humanist serif for titles, Inter with tabular figures for everything you read as data.
  */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
-  /* Color */
+  /* Color: ink + one accent, on warm neutrals */
   --color-ink: #14284b;          /* navy: primary text, primary actions */
   --color-ink-hover: #0d1c36;
-  --color-ink-soft: #e8ecf3;     /* navy tint for selected or done states */
+  --color-ink-soft: #ece7dc;     /* warm sand for selected, done and sunken states */
   --color-accent: #f28c0a;       /* amber: only for "look here" */
-  --color-accent-ink: #9a5200;   /* amber text on light backgrounds (4.5:1 on white) */
-  --color-accent-soft: #fdf1e0;
-  --color-copy: #334155;         /* slate-700: body text (text-copy) */
-  --color-muted: #5b6678;        /* secondary text (4.5:1+ on page and surface) */
-  --color-faint: #94a3b8;        /* decorative only, never for text */
-  --color-line: #e7e2d9;         /* hairlines on the warm page */
-  --color-line-strong: #cfd6e0;  /* input borders */
-  --color-page: #faf8f4;         /* warm off-white page background */
-  --color-surface: #ffffff;
+  --color-accent-ink: #94500a;   /* amber text on light backgrounds (5:1 on paper) */
+  --color-accent-soft: #fbefd8;
+  --color-accent-line: #efd3a3;
+  --color-copy: #38405a;         /* body text, navy-tinted charcoal */
+  --color-muted: #686257;        /* secondary text, warm gray (4.5:1+ on page, surface and sand) */
+  --color-quiet: #726c61;        /* fine print: lighter than muted, still 4.5:1 on the page */
+  --color-faint: #a8a090;        /* decorative only, never for text */
+  --color-line: #e8e1d3;         /* hairlines on the warm page */
+  --color-line-strong: #cbc1ac;  /* input borders */
+  --color-page: #f7f3eb;         /* warm paper */
+  --color-surface: #fffdf8;      /* warm white, a touch lighter than the page */
+  --color-good: #266a4b;
+  --color-good-soft: #e8f1e5;
+  --color-good-line: #b7d2bb;
+  --color-bad: #a33b2b;
+  --color-bad-soft: #fbebe6;
 
   /* Type scale: page title, section title, body, small, key number */
-  --text-title: 1.75rem;
-  --text-title--line-height: 2.25rem;
-  --text-title--font-weight: 700;
-  --text-section: 1.125rem;
-  --text-section--line-height: 1.75rem;
+  --text-title: 2.125rem;
+  --text-title--line-height: 2.625rem;
+  --text-title--font-weight: 600;
+  --text-section: 1.375rem;
+  --text-section--line-height: 1.875rem;
   --text-section--font-weight: 600;
   --text-body: 0.9375rem;
   --text-body--line-height: 1.5rem;
@@ -35,23 +46,90 @@
   --text-small--line-height: 1.25rem;
   --text-key: 2rem;
   --text-key--line-height: 2.5rem;
-  --text-key--font-weight: 700;
+  --text-key--font-weight: 600;
 
-  /* One radius, one shadow */
-  --radius-ui: 0.625rem;
-  --shadow-ui: 0 1px 2px rgb(20 40 75 / 0.05), 0 2px 8px rgb(20 40 75 / 0.04);
+  /* Two radii (surfaces, controls) and one warm shadow */
+  --radius-ui: 0.75rem;
+  --radius-card: 1rem;
+  --shadow-ui: 0 1px 0 rgb(80 56 20 / 0.03), 0 10px 28px -16px rgb(80 56 20 / 0.18);
+  --shadow-pop: 0 2px 6px rgb(80 56 20 / 0.08), 0 18px 44px -12px rgb(60 40 10 / 0.28);
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+  }
   body {
     background-color: var(--color-page);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-feature-settings: "cv11" 1, "ss03" 1;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Titles speak in the serif; everything you operate stays in Inter. */
+  h1,
+  h2 {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--text-title);
+    line-height: var(--text-title--line-height);
+    letter-spacing: -0.018em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* Every figure lines up: tables, inputs and definition values use tabular numerals. */
+  table,
+  input,
+  dd,
+  output {
+    font-variant-numeric: tabular-nums;
   }
   :focus-visible {
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+  /* Controls are not text: a fast double click on a button, toggle, tab or disclosure never selects its label.
+     Inputs, table data and prose stay selectable. */
+  button,
+  summary,
+  [role="tab"],
+  [role="radiogroup"] label,
+  label:has(> input[type="radio"]),
+  label:has(> input[type="checkbox"]),
+  nav a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    background: var(--color-accent-line);
+    color: var(--color-ink);
+  }
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 0.8;
+  }
+  input[type="date"] {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+  /* Table rhythm: quiet headers, hairlines between rows, a little air in every cell. */
+  table {
+    border-collapse: collapse;
+  }
+  thead th {
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: 0;
   }
 }
 
@@ -60,7 +138,82 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
+/* One text-field vocabulary for every bare input and select */
+.field {
+  border: 1px solid var(--color-line-strong);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--color-ink);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.field:hover { border-color: var(--color-faint); }
+.field:focus { outline: none; border-color: var(--color-ink); box-shadow: 0 0 0 3px rgb(20 40 75 / 0.12); }
+
+/* Range sliders: a hairline track, an ink fill, a warm-white thumb */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 1.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-line-strong);
+}
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-line-strong);
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  box-shadow: 0 1px 3px rgb(80 56 20 / 0.25);
+  transition: transform 150ms ease-out;
+}
+.range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  box-shadow: 0 1px 3px rgb(80 56 20 / 0.25);
+}
+.range:hover::-webkit-slider-thumb { transform: scale(1.1); }
+.range:focus-visible { outline-offset: 4px; }
+
+/* Scrollbars in the paper palette instead of the OS default */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--color-faint); background-clip: content-box; }
+
+/* The printed report lives beside #root: hidden on screen, the only thing printed on paper (US letter). */
+#print-report { display: none; }
+@page { size: letter; margin: 0.6in; }
 @media print {
-  header, nav, .no-print { display: none !important; }
-  body { background: white; }
+  body > *:not(#print-report) { display: none !important; }
+  #print-report { display: block; }
+  html, body { background: white; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
